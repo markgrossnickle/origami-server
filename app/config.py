@@ -6,7 +6,7 @@ API_KEY = os.environ.get("API_KEY", "")
 # Model config
 MODEL = "claude-haiku-4-5-20251001"
 FALLBACK_MODEL = "claude-sonnet-4-20250514"
-MAX_TOKENS = 2048
+MAX_TOKENS = 4096
 API_TIMEOUT = 30  # seconds
 
 # Rate limiting

@@ -117,6 +117,9 @@ async def _call_llm(prompt: str, model: str, system: str) -> dict:
         messages=[{"role": "user", "content": f"Create an origami model of: {prompt}"}],
     )
 
+    if message.stop_reason == "max_tokens":
+        logger.warning("Response truncated at max_tokens (%s) for model %s", MAX_TOKENS, model)
+
     text = message.content[0].text.strip()
     return _extract_json(text)
 
