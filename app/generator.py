@@ -54,7 +54,7 @@ Response format:
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
 Available categories: creature, avatar, vehicle, building, tool, prop
 
-Only generate safe, child-friendly objects. Refuse weapons, gore, inappropriate content — return {"error": "unsafe"} instead."""
+Generate child-friendly content. Fantasy creatures (skeletons, zombies, ghosts, witches, dragons, monsters) are perfectly fine — this is a game! Only refuse explicit gore, nudity, real-world hate symbols, or drug references — return {"error": "unsafe"} for those."""
 
 
 def _build_system_prompt(category: str | None, raw: bool) -> str:
