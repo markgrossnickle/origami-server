@@ -24,13 +24,15 @@ CATEGORY_PROMPTS = {
         "Suggest animation: idle_bob for calm creatures, wobble for nervous ones, flutter if it has wings."
     ),
     "avatar": (
-        "Humanoid character. Standing upright, head/torso/arms/legs. 10-12 studs tall. "
-        "Can have accessories (hat, cape, etc). Face features on head. "
-        "Style: blocky paper-doll look. Head is a Block with small detail parts for eyes/mouth. "
-        "Torso is a slightly wider Block, arms and legs are thin rotated Blocks. "
-        "Add character through pose — one arm raised, slight lean, head tilt. "
-        "Accessories (hat, scarf, tool) add personality. Use contrasting colors for clothing vs skin. "
-        "Suggest animation: idle_bob or breathe."
+        "Character skin applied to the player's Roblox avatar. This will recolor the player's body parts. "
+        "IMPORTANT: You MUST include parts named exactly: 'head', 'torso', 'left arm', 'right arm', "
+        "'left leg', 'right leg'. These map to the player's actual body parts and set their color/material. "
+        "Additional parts (like 'cape', 'horns', 'tail', 'wings', 'crown', 'scarf', 'eye_left', 'eye_right') "
+        "become decoration attached to the character. Keep decorations small (0.5-2 studs). "
+        "Style: bold, distinctive colors for each body region. Use contrasting colors for clothing vs skin areas. "
+        "Head color = face/skin, torso = shirt/armor, arms = sleeves/gauntlets, legs = pants/boots. "
+        "Add 2-5 decoration parts for personality (cape, horns, belt, shoulder pads, etc). "
+        "Suggest animation: none (applied to player character)."
     ),
     "vehicle": (
         "Rideable vehicle or transport the player will sit in and drive. "
