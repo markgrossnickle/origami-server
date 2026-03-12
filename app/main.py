@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
 
-CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "prop"]
+CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop"]
 
 
 def verify_api_key(x_api_key: str = Header()):
