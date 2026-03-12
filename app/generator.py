@@ -24,6 +24,7 @@ Style — IMPORTANT, follow this closely:
 - Rotate parts at angles (15°, 30°, 45°) to suggest paper folds rather than keeping everything axis-aligned
 - Use subtle color variation within the same hue family (e.g. light blue body, slightly darker blue wings) — not uniform flat color
 - Material should be SmoothPlastic for most parts (looks like paper), Foil for metallic accents, Neon sparingly for glowing details
+- NEVER place two parts at the exact same position or let faces overlap — this causes visual flickering. Offset detail parts by at least 0.1 studs from the surface they sit on
 - Leave small gaps between parts to suggest separate paper folds rather than a solid mass
 - Prefer asymmetric, characterful poses over rigid symmetry — slight head tilt, one arm up, tail curving
 - Add small detail parts: eyes, nostrils, claws, buttons, antennae — these make the model read well from a distance
