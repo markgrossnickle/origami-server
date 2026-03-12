@@ -16,15 +16,18 @@ RATE_LIMIT_HOURLY = 20  # max requests per hour per player
 # Category prompt additions
 CATEGORY_PROMPTS = {
     "creature": (
-        "Animal or fantasy creature. Build it from chains of Wedge segments like folded paper. "
-        "The body should be a chain of 5-10 alternating Wedge parts that taper from center to extremities. "
-        "Alternate between two close shades of the creature's color on adjacent segments. "
-        "Rotate every other segment 180° on Z to create accordion folds. "
-        "Head is a larger Wedge at the front, tail is the smallest Wedge at the back. "
-        "Legs/limbs are short chains of 2-3 small Wedges branching from the body. "
-        "Add tiny Ball parts for eyes (~0.3 studs, dark colored). "
-        "Use muted natural colors: sage greens, warm browns, dusty pinks, soft blues. "
-        "8-10 studs long, ground stance. "
+        "Animal or fantasy creature. Build HORIZONTALLY along the X axis, low to the ground (2-4 studs tall, 8-12 studs long). "
+        "Body: chain of 8-12 Wedge segments spaced ~0.6 studs apart along X. "
+        "CRITICAL: alternate every other segment's Z-rotation between 0° and 180° for the accordion-fold zigzag. "
+        "CRITICAL: taper segments from head (scale 1.0) to tail (scale 0.6) — each segment slightly smaller than the last. "
+        "Give segments a Z-wave: offset each segment's Z position by sin(index * 0.7) * 0.3 for organic curvature. "
+        "Name segments sequentially: seg_1, seg_2, seg_3, etc. "
+        "Color: pick two close shades and alternate per segment (e.g. [160,190,140] and [140,180,120]). "
+        "Set transparency: 0.06 on all segments for paper translucency. "
+        "Head is segment 1 (rightmost, largest). Tail is the last segment (leftmost, smallest). "
+        "Limbs (legs, wings, fins) are short sub-chains of 2-3 smaller Wedges branching off the body. "
+        "Eyes: tiny Ball parts (~0.24 studs, dark [20,20,20]) on the head segment. "
+        "DO NOT build upright like a tower. The creature should lie FLAT and HORIZONTAL like a real animal. "
         "Suggest animation: idle_bob for calm creatures, wobble for nervous ones, flutter if it has wings."
     ),
     "avatar": (

@@ -126,6 +126,11 @@ def validate_output(result: dict) -> dict | None:
         if isinstance(pos, list) and len(pos) >= 3:
             part["position"] = [max(-100, min(100, float(p))) for p in pos[:3]]
 
+        # Clamp transparency to 0-1
+        transparency = part.get("transparency")
+        if transparency is not None:
+            part["transparency"] = max(0, min(1, float(transparency)))
+
         sanitized_parts.append(part)
 
     if not sanitized_parts:
