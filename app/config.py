@@ -15,10 +15,54 @@ RATE_LIMIT_HOURLY = 20  # max requests per hour per player
 
 # Category prompt additions
 CATEGORY_PROMPTS = {
-    "creature": "Animal/fantasy creature. 4 legs (or appropriate limbs), tail, head with features. Ground stance. 8-10 studs tall. Emphasis on recognizable silhouette.",
-    "avatar": "Humanoid character. Standing upright, head/torso/arms/legs. 10-12 studs tall. Can have accessories (hat, cape, etc). Face features on head.",
-    "vehicle": "Vehicle/transport. Wheels, wings, or propulsion on bottom/sides. Elongated body. 6-8 studs tall, 12-16 studs long. Functional details (windows, doors).",
-    "building": "Architecture/structure. Flat bottom, vertical walls, roof. Door opening suggested. 15-20 studs tall. Can include windows, chimney, details.",
-    "tool": "Handheld tool/item. 3-5 studs total size. Grip/handle at bottom, functional end at top. Simple but recognizable.",
-    "prop": "Decorative object/prop. 2-8 studs. Sits on ground or table. Detail-focused.",
+    "creature": (
+        "Animal or fantasy creature. 4 legs (or appropriate limbs), tail, head with features. "
+        "Ground stance, 8-10 studs tall. Emphasis on recognizable silhouette. "
+        "Style: use Wedge parts for snout, ears, tail tip, and claws. Tilt the head slightly. "
+        "Body should be a large Block or two, legs are thin angled Blocks. "
+        "Add small Ball parts for eyes. Use 2-3 shades of the main color. "
+        "Suggest animation: idle_bob for calm creatures, wobble for nervous ones, flutter if it has wings."
+    ),
+    "avatar": (
+        "Humanoid character. Standing upright, head/torso/arms/legs. 10-12 studs tall. "
+        "Can have accessories (hat, cape, etc). Face features on head. "
+        "Style: blocky paper-doll look. Head is a Block with small detail parts for eyes/mouth. "
+        "Torso is a slightly wider Block, arms and legs are thin rotated Blocks. "
+        "Add character through pose — one arm raised, slight lean, head tilt. "
+        "Accessories (hat, scarf, tool) add personality. Use contrasting colors for clothing vs skin. "
+        "Suggest animation: idle_bob or breathe."
+    ),
+    "vehicle": (
+        "Vehicle or transport. Wheels, wings, or propulsion on bottom/sides. Elongated body. "
+        "6-8 studs tall, 12-16 studs long. Functional details (windows, doors). "
+        "Style: angular, faceted body like a paper airplane or cardboard car. "
+        "Use Wedge parts for hood, windshield angles, and tail fins. "
+        "Cylinders for wheels/exhaust only. Windows are thin inset Blocks in a darker color. "
+        "Add Foil material for chrome/metallic trim accents. "
+        "Suggest animation: idle_bob for floating vehicles, none for grounded."
+    ),
+    "building": (
+        "Architecture or structure. Flat bottom, vertical walls, roof. Door opening suggested. "
+        "15-20 studs tall. Can include windows, chimney, details. "
+        "Style: like a paper pop-up card. Walls are flat Blocks, roof uses angled Wedge parts. "
+        "Door is a darker recessed Block. Windows are small contrasting-color Blocks inset slightly. "
+        "Add a chimney, awning, or sign for character. Use warm colors (cream, tan, terracotta). "
+        "Suggest animation: none or breathe for magical buildings."
+    ),
+    "tool": (
+        "Handheld tool or item. 3-5 studs total size. Grip/handle at bottom, functional end at top. "
+        "Simple but recognizable. "
+        "Style: bold, chunky shapes — should read clearly even when small. "
+        "Handle is a thin Block, head/blade/end is a wider Block or Wedge. "
+        "Use Foil for metallic tool heads, SmoothPlastic for wooden handles. "
+        "Add 1-2 small accent parts (rivets, wrapping, gems). "
+        "Suggest animation: spin_slow."
+    ),
+    "prop": (
+        "Decorative object or prop. 2-8 studs. Sits on ground or table. Detail-focused. "
+        "Style: charming, detailed miniature. Pack detail into a small space. "
+        "Use varied shapes — mix Blocks, Wedges, Cylinders, small Balls for roundness. "
+        "Color should be vibrant and appealing. Add Neon for any glowing elements (gems, flames, screens). "
+        "Suggest animation: spin_slow for showcase items, idle_bob for living props."
+    ),
 }

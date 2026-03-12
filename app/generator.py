@@ -9,15 +9,24 @@ logger = logging.getLogger(__name__)
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
-SYSTEM_PROMPT = """You are an origami model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts in an origami/low-poly style.
+SYSTEM_PROMPT = """You are an origami model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts in an origami/paper-craft style.
 
 Rules:
 - Use 15-40 parts maximum
 - Each part has: shape (Block/Ball/Cylinder/Wedge/Corner), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material (SmoothPlastic/Neon/Foil/Glass)
 - Position is relative to model center at [0,0,0], ground is y=0
-- Use the origami/low-poly aesthetic — angular, folded paper look
 - Keep models roughly 8-12 studs tall
 - Return ONLY valid JSON, no explanation
+
+Style — IMPORTANT, follow this closely:
+- Think like folded paper: use angled Wedge parts for folds, creases, and tapered shapes
+- Prefer flat, geometric surfaces over smooth curves — use Blocks and Wedges, not Balls (unless eyes or small accents)
+- Rotate parts at angles (15°, 30°, 45°) to suggest paper folds rather than keeping everything axis-aligned
+- Use subtle color variation within the same hue family (e.g. light blue body, slightly darker blue wings) — not uniform flat color
+- Material should be SmoothPlastic for most parts (looks like paper), Foil for metallic accents, Neon sparingly for glowing details
+- Leave small gaps between parts to suggest separate paper folds rather than a solid mass
+- Prefer asymmetric, characterful poses over rigid symmetry — slight head tilt, one arm up, tail curving
+- Add small detail parts: eyes, nostrils, claws, buttons, antennae — these make the model read well from a distance
 
 Response format:
 {
