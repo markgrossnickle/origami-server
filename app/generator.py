@@ -70,6 +70,42 @@ def _build_system_prompt(category: str | None, raw: bool) -> str:
     return f"{SYSTEM_PROMPT}\n\nAuto-detect the best category from the prompt and set the \"category\" field accordingly."
 
 
+def _extract_json(text: str) -> dict:
+    """Extract JSON object from LLM response, handling extra text or code blocks."""
+    text = text.strip()
+
+    # Try direct parse first
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Strip markdown code blocks
+    if "```" in text:
+        # Find content between first ``` and last ```
+        start = text.index("```")
+        end = text.rindex("```")
+        if start != end:
+            inner = text[start:end]
+            # Remove the opening ```json or ```
+            inner = inner.split("\n", 1)[1] if "\n" in inner else inner[3:]
+            try:
+                return json.loads(inner.strip())
+            except json.JSONDecodeError:
+                pass
+
+    # Find outermost { ... } braces
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace > first_brace:
+        try:
+            return json.loads(text[first_brace : last_brace + 1])
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError("No valid JSON found in response", text, 0)
+
+
 async def _call_llm(prompt: str, model: str, system: str) -> dict:
     """Make one LLM call and parse the JSON response. Raises on failure."""
     message = await client.messages.create(
@@ -80,12 +116,7 @@ async def _call_llm(prompt: str, model: str, system: str) -> dict:
     )
 
     text = message.content[0].text.strip()
-
-    # Extract JSON from response (handle markdown code blocks)
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-
-    return json.loads(text)
+    return _extract_json(text)
 
 
 async def generate_model(
@@ -117,11 +148,11 @@ async def generate_model(
 
             return result
 
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             if attempt == 0:
-                logger.warning("Haiku returned invalid JSON, falling back to Sonnet")
+                logger.warning("Haiku returned invalid JSON, falling back to Sonnet. Raw: %s", e.doc[:500] if e.doc else "empty")
                 continue
-            logger.warning("Fallback model also returned invalid JSON")
+            logger.warning("Fallback model also returned invalid JSON. Raw: %s", e.doc[:500] if e.doc else "empty")
             return {"error": "generation_failed"}
         except anthropic.APIError as e:
             if attempt == 0:
