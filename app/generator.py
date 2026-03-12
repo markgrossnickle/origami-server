@@ -12,6 +12,7 @@ client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 SYSTEM_PROMPT = """You are an origami model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts in a folded-paper origami style.
 
 Rules:
+- The "name" field should be the subject itself (e.g. "Dragon", "Sports Car") — do NOT prefix with "Origami"
 - Use 15-40 parts maximum
 - Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material (SmoothPlastic/Neon/Foil/Glass)
 - Position is relative to model center at [0,0,0], ground is y=0
