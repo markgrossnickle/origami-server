@@ -50,13 +50,23 @@ CATEGORY_PROMPTS = {
         "Suggest animation: none or breathe for magical buildings."
     ),
     "tool": (
-        "Handheld tool or item. 3-5 studs total size. Grip/handle at bottom, functional end at top. "
-        "Simple but recognizable. "
+        "Handheld tool or weapon-like item the player will hold. 3-5 studs total size. "
+        "IMPORTANT: center the model at [0,0,0] with the grip/handle at the bottom (negative Y) "
+        "and the functional end at the top (positive Y). This will be converted to a Roblox Tool. "
         "Style: bold, chunky shapes — should read clearly even when small. "
-        "Handle is a thin Block, head/blade/end is a wider Block or Wedge. "
+        "Handle is a thin Block at bottom, head/blade/end is a wider Block or Wedge at top. "
         "Use Foil for metallic tool heads, SmoothPlastic for wooden handles. "
         "Add 1-2 small accent parts (rivets, wrapping, gems). "
-        "Suggest animation: spin_slow."
+        "Suggest animation: none (tool moves with player hand)."
+    ),
+    "hat": (
+        "Wearable hat or headwear that sits on top of a player's head. 2-4 studs tall, 2-4 studs wide. "
+        "IMPORTANT: center the model at [0,0,0] — the bottom of the hat (y=0) will sit on the head. "
+        "Build upward from y=0. Keep it lightweight (5-15 parts). "
+        "Style: playful, exaggerated proportions. A crown should have tall spikes, a top hat should be extra tall. "
+        "Use Wedge parts for brims, curves, and decorative edges. "
+        "Add small detail parts — feathers, gems, bands, buckles. "
+        "Suggest animation: none (hat moves with player head)."
     ),
     "prop": (
         "Decorative object or prop. 2-8 studs. Sits on ground or table. Detail-focused. "
