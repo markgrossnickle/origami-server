@@ -3,7 +3,7 @@ import logging
 
 import anthropic
 
-from app.config import ANTHROPIC_API_KEY, MAX_TOKENS, MODEL
+from app.config import ANTHROPIC_API_KEY, CATEGORY_PROMPTS, FALLBACK_MODEL, MAX_TOKENS, MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ Rules:
 Response format:
 {
   "name": "Dragon",
-  "category": "fantasy_creature",
+  "category": "creature",
   "parts": [
     {
       "name": "body",
@@ -39,44 +39,85 @@ Response format:
 }
 
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
+Available categories: creature, avatar, vehicle, building, tool, prop
 
 Only generate safe, child-friendly objects. Refuse weapons, gore, inappropriate content — return {"error": "unsafe"} instead."""
 
 
-async def generate_model(prompt: str) -> dict:
+def _build_system_prompt(category: str | None, raw: bool) -> str:
+    """Build the system prompt, optionally adding category-specific guidance."""
+    if raw:
+        return SYSTEM_PROMPT
+
+    if category and category in CATEGORY_PROMPTS:
+        guidance = CATEGORY_PROMPTS[category]
+        return f"{SYSTEM_PROMPT}\n\nCategory guidance for this request ({category}): {guidance}"
+
+    # No category — tell the LLM to auto-detect
+    return f"{SYSTEM_PROMPT}\n\nAuto-detect the best category from the prompt and set the \"category\" field accordingly."
+
+
+async def _call_llm(prompt: str, model: str, system: str) -> dict:
+    """Make one LLM call and parse the JSON response. Raises on failure."""
+    message = await client.messages.create(
+        model=model,
+        max_tokens=MAX_TOKENS,
+        system=system,
+        messages=[{"role": "user", "content": f"Create an origami model of: {prompt}"}],
+    )
+
+    text = message.content[0].text.strip()
+
+    # Extract JSON from response (handle markdown code blocks)
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+    return json.loads(text)
+
+
+async def generate_model(
+    prompt: str,
+    category: str | None = None,
+    raw: bool = False,
+) -> dict:
     """Generate an origami model description from a text prompt."""
-    try:
-        message = await client.messages.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": f"Create an origami model of: {prompt}"}],
-        )
+    system = _build_system_prompt(category, raw)
 
-        text = message.content[0].text.strip()
+    for attempt, model in enumerate([MODEL, FALLBACK_MODEL]):
+        try:
+            result = await _call_llm(prompt, model, system)
 
-        # Extract JSON from response (handle markdown code blocks)
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            if "error" in result:
+                return {"error": result["error"]}
 
-        result = json.loads(text)
+            # Validate part count
+            parts = result.get("parts", [])
+            if len(parts) > 50:
+                result["parts"] = parts[:50]
 
-        if "error" in result:
-            return {"error": result["error"]}
+            # Add metadata
+            result["model_used"] = model
+            if category:
+                result["category_hint"] = category
+            else:
+                result["category_hint"] = result.get("category", "unknown")
 
-        # Validate part count
-        parts = result.get("parts", [])
-        if len(parts) > 50:
-            result["parts"] = parts[:50]
+            return result
 
-        return result
+        except json.JSONDecodeError:
+            if attempt == 0:
+                logger.warning("Haiku returned invalid JSON, falling back to Sonnet")
+                continue
+            logger.warning("Fallback model also returned invalid JSON")
+            return {"error": "generation_failed"}
+        except anthropic.APIError as e:
+            if attempt == 0:
+                logger.warning("Haiku API error (%s), falling back to Sonnet", e)
+                continue
+            logger.warning("Fallback model API error: %s", e)
+            return {"error": "api_error"}
+        except Exception:
+            logger.exception("Unexpected error in generate_model")
+            return {"error": "internal_error"}
 
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse LLM response as JSON")
-        return {"error": "generation_failed"}
-    except anthropic.APIError as e:
-        logger.warning("Anthropic API error: %s", e)
-        return {"error": "api_error"}
-    except Exception:
-        logger.exception("Unexpected error in generate_model")
-        return {"error": "internal_error"}
+    return {"error": "generation_failed"}
