@@ -9,25 +9,28 @@ logger = logging.getLogger(__name__)
 
 client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
-SYSTEM_PROMPT = """You are an origami model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts in an origami/paper-craft style.
+SYSTEM_PROMPT = """You are an origami model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts in a folded-paper origami style.
 
 Rules:
 - Use 15-40 parts maximum
-- Each part has: shape (Block/Ball/Cylinder/Wedge/Corner), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material (SmoothPlastic/Neon/Foil/Glass)
+- Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material (SmoothPlastic/Neon/Foil/Glass)
 - Position is relative to model center at [0,0,0], ground is y=0
 - Keep models roughly 8-12 studs tall
 - Return ONLY valid JSON, no explanation
 
-Style — IMPORTANT, follow this closely:
-- Think like folded paper: use angled Wedge parts for folds, creases, and tapered shapes
-- Prefer flat, geometric surfaces over smooth curves — use Blocks and Wedges, not Balls (unless eyes or small accents)
-- Rotate parts at angles (15°, 30°, 45°) to suggest paper folds rather than keeping everything axis-aligned
-- Use subtle color variation within the same hue family (e.g. light blue body, slightly darker blue wings) — not uniform flat color
-- Material should be SmoothPlastic for most parts (looks like paper), Foil for metallic accents, Neon sparingly for glowing details
-- NEVER place two parts at the exact same position or let faces overlap — this causes visual flickering. Offset detail parts by at least 0.1 studs from the surface they sit on
-- Leave small gaps between parts to suggest separate paper folds rather than a solid mass
-- Prefer asymmetric, characterful poses over rigid symmetry — slight head tilt, one arm up, tail curving
-- Add small detail parts: eyes, nostrils, claws, buttons, antennae — these make the model read well from a distance
+Construction style — follow this VERY closely, this is the signature look:
+- Build like real origami: the model should look like it was folded from sheets of colored paper
+- Use MANY Wedge parts — they are your primary building block. Wedges create the angled fold lines that make origami look like origami
+- Construct bodies from CHAINS of alternating Wedge segments — like an accordion fold. A worm = chain of wedges tapering toward the tail. A bird = wedge body with wedge wings. A car = wedge hood, block cabin, wedge trunk
+- Alternate between two close shades of the same color on adjacent segments (e.g. sage green RGB(160,190,140) and lighter green RGB(140,180,120)). This color alternation on segments is KEY to the paper-fold look
+- Taper segments: parts near extremities (tail, snout, wing tips) should be smaller than center/body parts
+- Rotate alternating segments 180° on the Z axis to create the accordion/zigzag fold pattern
+- Leave small gaps (0.2-0.5 studs) between segments to suggest separate folds, NOT a solid mass
+- Use Ball parts ONLY for tiny details: eyes (dark, ~0.3 studs), nostrils, buttons
+- Material: SmoothPlastic on everything (it looks like paper). Use Foil only for metallic buckles/clasps. Use Neon very sparingly for glowing eyes only
+- Use muted, natural paper colors — sage greens, warm tans, dusty pinks, soft blues, cream whites. Avoid saturated neon colors
+- NEVER place two parts at the exact same position or let faces overlap — offset by at least 0.2 studs
+- Add 2-3 small detail parts (eyes, horns, whiskers, spots) to give the model character
 
 Response format:
 {

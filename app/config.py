@@ -16,11 +16,15 @@ RATE_LIMIT_HOURLY = 20  # max requests per hour per player
 # Category prompt additions
 CATEGORY_PROMPTS = {
     "creature": (
-        "Animal or fantasy creature. 4 legs (or appropriate limbs), tail, head with features. "
-        "Ground stance, 8-10 studs tall. Emphasis on recognizable silhouette. "
-        "Style: use Wedge parts for snout, ears, tail tip, and claws. Tilt the head slightly. "
-        "Body should be a large Block or two, legs are thin angled Blocks. "
-        "Add small Ball parts for eyes. Use 2-3 shades of the main color. "
+        "Animal or fantasy creature. Build it from chains of Wedge segments like folded paper. "
+        "The body should be a chain of 5-10 alternating Wedge parts that taper from center to extremities. "
+        "Alternate between two close shades of the creature's color on adjacent segments. "
+        "Rotate every other segment 180° on Z to create accordion folds. "
+        "Head is a larger Wedge at the front, tail is the smallest Wedge at the back. "
+        "Legs/limbs are short chains of 2-3 small Wedges branching from the body. "
+        "Add tiny Ball parts for eyes (~0.3 studs, dark colored). "
+        "Use muted natural colors: sage greens, warm browns, dusty pinks, soft blues. "
+        "8-10 studs long, ground stance. "
         "Suggest animation: idle_bob for calm creatures, wobble for nervous ones, flutter if it has wings."
     ),
     "avatar": (
