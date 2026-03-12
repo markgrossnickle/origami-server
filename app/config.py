@@ -24,15 +24,14 @@ CATEGORY_PROMPTS = {
         "Suggest animation: idle_bob for calm creatures, wobble for nervous ones, flutter if it has wings."
     ),
     "avatar": (
-        "Character skin applied to the player's Roblox avatar. This will recolor the player's body parts. "
-        "IMPORTANT: You MUST include parts named exactly: 'head', 'torso', 'left arm', 'right arm', "
-        "'left leg', 'right leg'. These map to the player's actual body parts and set their color/material. "
-        "Additional parts (like 'cape', 'horns', 'tail', 'wings', 'crown', 'scarf', 'eye_left', 'eye_right') "
-        "become decoration attached to the character. Keep decorations small (0.5-2 studs). "
-        "Style: bold, distinctive colors for each body region. Use contrasting colors for clothing vs skin areas. "
-        "Head color = face/skin, torso = shirt/armor, arms = sleeves/gauntlets, legs = pants/boots. "
-        "Add 2-5 decoration parts for personality (cape, horns, belt, shoulder pads, etc). "
-        "Suggest animation: none (applied to player character)."
+        "Complete character model that replaces the player's entire avatar. "
+        "Build a full humanoid-shaped origami figure centered at [0,0,0], 8-10 studs tall. "
+        "The model will be welded to the player's invisible body, so it must look like a complete character on its own. "
+        "Include a head, torso, arms, and legs as separate parts — but name them creatively (not Roblox body part names). "
+        "Style: bold, expressive origami character. Use angled Wedge parts for shoulders, knees, elbows, and facial features. "
+        "Give it personality — a helmet, cape, armor plates, glowing eyes, tail, wings, whatever fits the theme. "
+        "Use 2-3 color shades for depth. Add small detail parts (eyes, buttons, belt, claws). "
+        "Suggest animation: none (moves with the player's character)."
     ),
     "vehicle": (
         "Rideable vehicle or transport the player will sit in and drive. "
