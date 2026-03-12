@@ -68,11 +68,12 @@ CATEGORY_PROMPTS = {
         "Suggest animation: none (tool moves with player hand)."
     ),
     "hat": (
-        "Wearable hat or headwear that sits on top of a player's head. 2-4 studs tall, 2-4 studs wide. "
-        "IMPORTANT: center the model at [0,0,0] — the bottom of the hat (y=0) will sit on the head. "
-        "Build upward from y=0. Keep it lightweight (5-15 parts). "
-        "Style: playful, exaggerated proportions. A crown should have tall spikes, a top hat should be extra tall. "
-        "Use Wedge parts for brims, curves, and decorative edges. "
+        "Wearable hat that sits on top of a player's head. Keep it SMALL: 1-2 studs tall, 2-3 studs wide max. "
+        "The player's head is only ~1.2 studs wide, so the hat must be proportional. "
+        "IMPORTANT: center at [0,0,0]. ALL parts must be at y >= 0 (nothing below the head). "
+        "Build upward from y=0. Keep it lightweight (5-12 parts). "
+        "Style: compact, recognizable silhouette. Brims should be thin (0.2-0.3 studs thick). "
+        "Use Wedge parts for brims and decorative edges. "
         "Add small detail parts — feathers, gems, bands, buckles. "
         "Suggest animation: none (hat moves with player head)."
     ),
