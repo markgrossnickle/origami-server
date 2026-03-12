@@ -4,6 +4,7 @@ import logging
 import anthropic
 
 from app.config import ANTHROPIC_API_KEY, CATEGORY_PROMPTS, FALLBACK_MODEL, MAX_TOKENS, MODEL
+from app.safety import validate_output
 
 logger = logging.getLogger(__name__)
 
@@ -135,10 +136,13 @@ async def generate_model(
             if "error" in result:
                 return {"error": result["error"]}
 
-            # Validate part count
-            parts = result.get("parts", [])
-            if len(parts) > 50:
-                result["parts"] = parts[:50]
+            # Validate and sanitize LLM output
+            result = validate_output(result)
+            if result is None:
+                if attempt == 0:
+                    logger.warning("Haiku output failed validation, falling back")
+                    continue
+                return {"error": "generation_failed"}
 
             # Add metadata
             result["model_used"] = model
