@@ -3,7 +3,7 @@ import logging
 
 import anthropic
 
-from app.config import ANTHROPIC_API_KEY, CATEGORY_PROMPTS, FALLBACK_MODEL, MAX_TOKENS, MODEL
+from app.config import ANTHROPIC_API_KEY, CATEGORY_PROMPTS, FALLBACK_MODEL, MAX_TOKENS, MODEL, STYLE_PROMPTS
 from app.safety import validate_output
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,7 @@ Here is a CONCRETE EXAMPLE of a worm built with this technique (study this patte
     {"name": "eye_R", "shape": "Ball", "position": [0.2, 0.9, -0.2], "size": [0.24, 0.24, 0.24], "rotation": [0, 0, 0], "color": [20, 20, 20], "material": "SmoothPlastic"}
   ],
   "animation": "idle_bob",
+  "locomotion": "slither",
   "description": "A segmented paper worm with accordion folds"
 }
 
@@ -85,11 +86,21 @@ Response format:
     }
   ],
   "animation": "idle_bob",
+  "locomotion": "fly",
   "description": "A fierce origami dragon with angular wings"
 }
 
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
 Available categories: creature, avatar, vehicle, building, tool, prop
+
+LOCOMOTION (required for creatures — how the creature moves through the world):
+- "walk" — four-legged or bipedal ground walker (dogs, horses, dinosaurs, spiders). Stays on ground, moves at moderate speed.
+- "slither" — legless ground crawler (worms, snakes, caterpillars). Stays flat on ground, slow, sinuous path.
+- "fly" — winged flyer (birds, dragons, butterflies, bats). Moves through air above ground, swoops up and down.
+- "float" — drifting/hovering (ghosts, jellyfish, balloons, spirits). Hovers above ground, slow gentle drift, bobs vertically.
+- "hop" — jumping movement (frogs, rabbits, kangaroos, crickets). Ground-based but moves in discrete hops/bounces.
+- "stationary" — doesn't move (corals, barnacles, mushroom creatures, plants). Stays in place, only body animation.
+Choose the locomotion that best matches how this creature would naturally move. Default to "walk" if unsure.
 
 SHAPE SAFETY — this is critical:
 - This is a children's game. Consider what the FINAL 3D SHAPE looks like, not just the text prompt.
@@ -100,17 +111,25 @@ SHAPE SAFETY — this is critical:
 Generate child-friendly content. Fantasy creatures (skeletons, zombies, ghosts, witches, dragons, monsters) are perfectly fine — this is a game! Only refuse explicit gore, nudity, real-world hate symbols, drug references, or shapes resembling genitalia/obscene gestures — return {"error": "unsafe"} for those."""
 
 
-def _build_system_prompt(category: str | None, raw: bool) -> str:
-    """Build the system prompt, optionally adding category-specific guidance."""
+def _build_system_prompt(category: str | None, raw: bool, style: str = "origami") -> str:
+    """Build the system prompt, layering style and category guidance."""
     if raw:
         return SYSTEM_PROMPT
 
+    parts = [SYSTEM_PROMPT]
+
+    # Layer 1: Style override (replaces construction aesthetics)
+    if style and style in STYLE_PROMPTS:
+        parts.append(f"\n\n{STYLE_PROMPTS[style]}")
+
+    # Layer 2: Category guidance (type-specific structure)
     if category and category in CATEGORY_PROMPTS:
         guidance = CATEGORY_PROMPTS[category]
-        return f"{SYSTEM_PROMPT}\n\nCategory guidance for this request ({category}): {guidance}"
+        parts.append(f"\n\nCategory guidance for this request ({category}): {guidance}")
+    else:
+        parts.append('\n\nAuto-detect the best category from the prompt and set the "category" field accordingly.')
 
-    # No category — tell the LLM to auto-detect
-    return f"{SYSTEM_PROMPT}\n\nAuto-detect the best category from the prompt and set the \"category\" field accordingly."
+    return "".join(parts)
 
 
 def _extract_json(text: str) -> dict:
@@ -168,10 +187,11 @@ async def _call_llm(prompt: str, model: str, system: str) -> dict:
 async def generate_model(
     prompt: str,
     category: str | None = None,
+    style: str = "origami",
     raw: bool = False,
 ) -> dict:
     """Generate an origami model description from a text prompt."""
-    system = _build_system_prompt(category, raw)
+    system = _build_system_prompt(category, raw, style)
 
     for attempt, model in enumerate([MODEL, FALLBACK_MODEL]):
         try:

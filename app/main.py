@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, Header
 from pydantic import BaseModel
 
 from app.cache import get_cached, set_cached
-from app.config import API_KEY, CATEGORY_PROMPTS
+from app.config import API_KEY, CATEGORY_PROMPTS, STYLE_PROMPTS
 from app.generator import generate_model
 from app.rate_limit import check_rate_limit
 from app.safety import validate_input
@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
 
 CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop"]
+StyleType = Literal[
+    "origami", "lowpoly", "voxel", "balloon", "wireframe",
+    "crystal", "plush", "steampunk", "pixel", "neon", "freestyle",
+]
 
 
 def verify_api_key(x_api_key: str = Header()):
@@ -29,6 +33,7 @@ class GenerateRequest(BaseModel):
     prompt: str
     player_id: str
     category: CategoryType | None = None
+    style: StyleType = "origami"
     raw: bool = False
 
 
@@ -65,8 +70,12 @@ async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
     if request.category and request.category not in CATEGORY_PROMPTS:
         return GenerateResponse(success=False, error="invalid_category")
 
+    # Validate style
+    if request.style not in STYLE_PROMPTS:
+        return GenerateResponse(success=False, error="invalid_style")
+
     # Check cache
-    cache_key = f"{request.prompt}:{request.category or ''}:{'raw' if request.raw else ''}"
+    cache_key = f"{request.prompt}:{request.category or ''}:{request.style}:{'raw' if request.raw else ''}"
     cached = get_cached(cache_key)
     if cached:
         return GenerateResponse(
@@ -77,7 +86,7 @@ async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
         )
 
     # Generate via LLM
-    result = await generate_model(request.prompt, category=request.category, raw=request.raw)
+    result = await generate_model(request.prompt, category=request.category, style=request.style, raw=request.raw)
 
     if "error" in result:
         return GenerateResponse(success=False, error=result["error"])
