@@ -33,13 +33,16 @@ CATEGORY_PROMPTS = {
         "Suggest animation: idle_bob or breathe."
     ),
     "vehicle": (
-        "Vehicle or transport. Wheels, wings, or propulsion on bottom/sides. Elongated body. "
-        "6-8 studs tall, 12-16 studs long. Functional details (windows, doors). "
+        "Rideable vehicle or transport the player will sit in and drive. "
+        "IMPORTANT: center the model at [0,0,0]. Leave a gap/opening near the center for "
+        "an invisible driver seat (don't create the seat — the game adds it automatically). "
+        "Body should surround where a seated player would be. 6-8 studs tall, 12-16 studs long. "
+        "Wheels, wings, or propulsion on bottom/sides. Functional details (windows, doors). "
         "Style: angular, faceted body like a paper airplane or cardboard car. "
         "Use Wedge parts for hood, windshield angles, and tail fins. "
-        "Cylinders for wheels/exhaust only. Windows are thin inset Blocks in a darker color. "
+        "Cylinders for wheels only. Windows are thin inset Blocks in a darker color. "
         "Add Foil material for chrome/metallic trim accents. "
-        "Suggest animation: idle_bob for floating vehicles, none for grounded."
+        "Suggest animation: none (vehicle is physics-driven by the player)."
     ),
     "building": (
         "Architecture or structure. Flat bottom, vertical walls, roof. Door opening suggested. "
