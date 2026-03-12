@@ -91,7 +91,13 @@ Response format:
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
 Available categories: creature, avatar, vehicle, building, tool, prop
 
-Generate child-friendly content. Fantasy creatures (skeletons, zombies, ghosts, witches, dragons, monsters) are perfectly fine — this is a game! Only refuse explicit gore, nudity, real-world hate symbols, or drug references — return {"error": "unsafe"} for those."""
+SHAPE SAFETY — this is critical:
+- This is a children's game. Consider what the FINAL 3D SHAPE looks like, not just the text prompt.
+- NEVER generate shapes that resemble genitalia, middle fingers, or other inappropriate body parts — even if the prompt seems innocent.
+- If a prompt asks for a shape combination that would look phallic (e.g. a tall cylinder with spheres at the base), refuse with {"error": "unsafe"}.
+- If the prompt is clearly trying to trick you into making something inappropriate through euphemism or indirect description, refuse.
+
+Generate child-friendly content. Fantasy creatures (skeletons, zombies, ghosts, witches, dragons, monsters) are perfectly fine — this is a game! Only refuse explicit gore, nudity, real-world hate symbols, drug references, or shapes resembling genitalia/obscene gestures — return {"error": "unsafe"} for those."""
 
 
 def _build_system_prompt(category: str | None, raw: bool) -> str:

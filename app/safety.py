@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,17 @@ BLOCKED_PATTERNS = [
     r"\bnude\b", r"\bnaked\b", r"\bsexy\b", r"\bnsfw\b",
     r"\bdrug\b", r"\bcocaine\b", r"\bheroin\b", r"\bweed\b",
     r"\bhitler\b", r"\bnazi\b", r"\bterrorist\b",
+    # Anatomical / euphemism patterns
+    r"\bpenis\b", r"\bdick\b", r"\bcock\b", r"\bphallic\b", r"\bphallus\b",
+    r"\bboob\b", r"\bboobs\b", r"\btits\b", r"\bbreast\b",
+    r"\bbutt\s*plug\b", r"\bdildo\b", r"\bvagina\b", r"\banus\b",
+    r"\bmiddle\s+finger\b", r"\bflip\w*\s+off\b", r"\bflipping\s+off\b",
+    # Shape-based euphemisms people use to bypass filters
+    r"\bcylinder\b.*\bballs?\b", r"\bballs?\b.*\bcylinder\b",
+    r"\blong\b.*\bshaft\b", r"\bshaft\b.*\bballs?\b",
+    r"\btwo\s+balls\b", r"\b2\s+balls\b",
+    r"\berect\b", r"\berection\b",
+    r"\bpp\b",
 ]
 
 # Prompt injection patterns — attempts to override the system prompt
@@ -81,6 +93,119 @@ VALID_MATERIALS = {"SmoothPlastic", "Neon", "Glass", "Metal", "Wood", "Foil",
                    "Sand", "Grass"}
 
 
+def _check_phallic_geometry(parts: list[dict]) -> bool:
+    """Detect phallic-looking geometry: a tall cylinder/block with balls at or near its base.
+
+    Returns True if the shape is suspicious and should be rejected.
+    """
+    # Separate parts by shape
+    cylinders = []
+    balls = []
+    blocks = []
+
+    for p in parts:
+        shape = p.get("shape", "Block")
+        size = p.get("size", [1, 1, 1])
+        pos = p.get("position", [0, 0, 0])
+
+        if not isinstance(size, list) or len(size) < 3:
+            continue
+        if not isinstance(pos, list) or len(pos) < 3:
+            continue
+
+        sx, sy, sz = float(size[0]), float(size[1]), float(size[2])
+        px, py, pz = float(pos[0]), float(pos[1]), float(pos[2])
+
+        entry = {"sx": sx, "sy": sy, "sz": sz, "px": px, "py": py, "pz": pz}
+
+        if shape == "Cylinder":
+            cylinders.append(entry)
+        elif shape == "Ball":
+            balls.append(entry)
+        elif shape == "Block":
+            blocks.append(entry)
+
+    # Check: tall vertical cylinder/block + 2 balls near its base
+    shafts = []
+    for c in cylinders + blocks:
+        height = c["sy"]
+        width = max(c["sx"], c["sz"])
+        # Tall and narrow = shaft-like (height at least 2x the width)
+        if height > 2.0 and height / max(width, 0.1) >= 2.0:
+            shafts.append(c)
+
+    if not shafts or len(balls) < 2:
+        return False
+
+    for shaft in shafts:
+        shaft_bottom_y = shaft["py"] - shaft["sy"] / 2
+        shaft_cx = shaft["px"]
+        shaft_cz = shaft["pz"]
+
+        # Find balls near the bottom of the shaft
+        nearby_balls = 0
+        for ball in balls:
+            # Ball should be near the shaft's bottom Y
+            ball_y = ball["py"]
+            dy = abs(ball_y - shaft_bottom_y)
+            # Ball should be laterally close to the shaft
+            dx = abs(ball["px"] - shaft_cx)
+            dz = abs(ball["pz"] - shaft_cz)
+            lateral_dist = math.sqrt(dx * dx + dz * dz)
+
+            if dy < 2.0 and lateral_dist < 4.0:
+                nearby_balls += 1
+
+        if nearby_balls >= 2:
+            logger.warning("Phallic geometry detected: tall shaft with %d balls at base", nearby_balls)
+            return True
+
+    return False
+
+
+def _check_middle_finger(parts: list[dict]) -> bool:
+    """Detect middle-finger-like geometry: one tall narrow part flanked by shorter parts."""
+    tall_parts = []
+    short_parts = []
+
+    for p in parts:
+        size = p.get("size", [1, 1, 1])
+        pos = p.get("position", [0, 0, 0])
+        if not isinstance(size, list) or len(size) < 3:
+            continue
+        if not isinstance(pos, list) or len(pos) < 3:
+            continue
+
+        sx, sy, sz = float(size[0]), float(size[1]), float(size[2])
+        px, py, pz = float(pos[0]), float(pos[1]), float(pos[2])
+        width = max(sx, sz)
+
+        entry = {"sx": sx, "sy": sy, "sz": sz, "px": px, "py": py, "pz": pz, "width": width}
+
+        if sy / max(width, 0.1) >= 3.0 and sy > 2.0:
+            tall_parts.append(entry)
+        elif sy / max(width, 0.1) >= 1.5 and sy > 1.0:
+            short_parts.append(entry)
+
+    if len(tall_parts) != 1 or len(short_parts) < 2:
+        return False
+
+    # Check if shorter parts flank the tall one laterally
+    tall = tall_parts[0]
+    flanking = 0
+    for s in short_parts:
+        lateral = abs(s["px"] - tall["px"]) + abs(s["pz"] - tall["pz"])
+        y_diff = abs(s["py"] - tall["py"])
+        if lateral < 4.0 and y_diff < 3.0 and s["sy"] < tall["sy"] * 0.7:
+            flanking += 1
+
+    if flanking >= 2:
+        logger.warning("Middle-finger-like geometry detected")
+        return True
+
+    return False
+
+
 def validate_output(result: dict) -> dict | None:
     """Validate LLM output. Returns sanitized result or None if invalid."""
     if not isinstance(result, dict):
@@ -137,6 +262,12 @@ def validate_output(result: dict) -> dict | None:
         return None
 
     result["parts"] = sanitized_parts
+
+    # Geometric shape checks — catch inappropriate shapes the LLM generated
+    if _check_phallic_geometry(sanitized_parts):
+        return None
+    if _check_middle_finger(sanitized_parts):
+        return None
 
     # Sanitize name — strip anything weird
     name = result.get("name", "")
