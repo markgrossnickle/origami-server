@@ -43,7 +43,7 @@ CONSTRUCTION:
 - Add 2-3 small detail parts for character (eyes, horns, whiskers, spots, antennae)
 
 ORIENTATION AND SCALE:
-- Creatures/animals: horizontal and low (2-4 studs tall, 8-12 studs long)
+- Creatures/animals: orient naturally for the species (8-12 studs in longest dimension)
 - Buildings: vertical (15-20 studs tall)
 - Vehicles: horizontal (6-8 tall, 12-16 long)
 - Props/tools: compact (2-8 studs)

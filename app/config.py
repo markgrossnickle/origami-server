@@ -22,7 +22,7 @@ MODELS = {
 }
 
 # Rate limiting
-RATE_LIMIT_BURST_SECONDS = 10  # 1 request per N seconds
+RATE_LIMIT_BURST_SECONDS = 1  # 1 request per N seconds
 RATE_LIMIT_HOURLY = 20  # max requests per hour per player
 RATE_LIMIT_DM_BURST_SECONDS = 2  # DM mode: faster burst for scene building
 RATE_LIMIT_DM_HOURLY = 100  # DM mode: higher hourly limit
