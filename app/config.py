@@ -178,8 +178,8 @@ STYLE_PROMPTS = {
     ),
     "balloon": (
         "STYLE — Balloon (inflated, round, bouncy):\n"
-        "Build primarily with Ball and Cylinder parts to create inflated, puffy, balloon-animal shapes. "
-        "Balls for body segments, heads, paws. Cylinders for limbs and connecting tubes. No Wedge parts. "
+        "ONLY use Ball and Cylinder shapes — NO Block, NO Wedge. Every single part must be Ball or Cylinder. "
+        "Balls for body segments, heads, paws, round features. Cylinders for limbs, tubes, and connecting joints. "
         "Sizes should be generous and rounded — nothing thin or sharp. Use 15-30 parts. "
         "Colors: bright candy palette — hot pink [255,100,150], sky blue [100,180,255], sunny yellow [255,220,80], "
         "mint green [100,220,170], lavender [180,140,255]. SmoothPlastic material. Transparency 0. "
@@ -250,10 +250,10 @@ STYLE_PROMPTS = {
     "freestyle": (
         "STYLE — Freestyle (your choice):\n"
         "You have full creative freedom over shapes, materials, colors, and construction technique. "
-        "Use whatever combination of Block, Ball, Cylinder, and Wedge parts best represents the subject. "
+        "Favor Block, Ball, and Cylinder parts — only use Wedge if the subject specifically needs angled/sloped surfaces. "
         "Pick materials and colors that look good for this specific subject. "
         "Build the shape that best captures the subject — round things should be round, "
-        "sharp things should be sharp, translucent things should use Glass. Trust your judgment."
+        "boxy things should be boxy, translucent things should use Glass. Trust your judgment."
     ),
 }
 
