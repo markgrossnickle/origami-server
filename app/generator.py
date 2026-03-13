@@ -140,13 +140,18 @@ def _extract_json(text: str) -> dict:
     raise json.JSONDecodeError("No valid JSON found in response", text, 0)
 
 
-async def _call_llm(prompt: str, model: str, system: str) -> dict:
+async def _call_llm(prompt: str, model: str, system: str, category: str | None = None) -> dict:
     """Make one LLM call and parse the JSON response. Raises on failure."""
+    if category == "animation":
+        user_message = f"Create a keyframe animation for: {prompt}"
+    else:
+        user_message = f"Create an origami model of: {prompt}"
+
     message = await client.messages.create(
         model=model,
         max_tokens=MAX_TOKENS,
         system=system,
-        messages=[{"role": "user", "content": f"Create an origami model of: {prompt}"}],
+        messages=[{"role": "user", "content": user_message}],
     )
 
     if message.stop_reason == "max_tokens":
@@ -171,7 +176,7 @@ async def generate_model(
 
     for attempt, model_id in enumerate(models_to_try):
         try:
-            result = await _call_llm(prompt, model_id, system)
+            result = await _call_llm(prompt, model_id, system, category=category)
 
             if "error" in result:
                 return {"error": result["error"]}

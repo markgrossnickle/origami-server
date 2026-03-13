@@ -91,6 +91,44 @@ CATEGORY_PROMPTS = {
         "Decorative object or prop. 2-8 studs. Sits on ground or table. "
         "Suggest animation: spin_slow for showcase items, idle_bob for living props."
     ),
+    "animation": (
+        "ANIMATION MODE — You are generating a keyframe animation for an R15 humanoid mannequin, NOT a 3D model.\n"
+        "Return ONLY a JSON object in this exact format (no parts array, no model data):\n"
+        "{\n"
+        '  "name": "Animation Name",\n'
+        '  "duration": 2.0,\n'
+        '  "loop": false,\n'
+        '  "keyframes": [\n'
+        '    { "time": 0, "joints": { "RightShoulder": [0, 0, 0] } },\n'
+        '    { "time": 1.0, "joints": { "RightShoulder": [0, 0, -90] } }\n'
+        "  ]\n"
+        "}\n\n"
+        "AVAILABLE JOINTS and what their [X, Y, Z] degree rotations mean:\n"
+        "- Neck: X=nod down(+)/up(-), Y=turn left(+)/right(-), Z=tilt left(+)/right(-)\n"
+        "- Waist: X=lean forward(+)/back(-), Y=twist left(+)/right(-), Z=side lean left(+)/right(-)\n"
+        "- RightShoulder: X=raise forward(+)/back(-), Y=rotate inward(+)/outward(-), Z=raise sideways up(-)/down(+)\n"
+        "- LeftShoulder: X=raise forward(+)/back(-), Y=rotate outward(+)/inward(-), Z=raise sideways up(+)/down(-)\n"
+        "- RightElbow: X=bend(+), Y=0, Z=0\n"
+        "- LeftElbow: X=bend(-), Y=0, Z=0\n"
+        "- RightHip: X=kick forward(-)/back(+), Y=rotate inward(+)/outward(-), Z=spread outward(-)/inward(+)\n"
+        "- LeftHip: X=kick forward(-)/back(+), Y=rotate outward(+)/inward(-), Z=spread outward(+)/inward(-)\n"
+        "- RightKnee: X=bend back(+), Y=0, Z=0\n"
+        "- LeftKnee: X=bend back(+), Y=0, Z=0\n"
+        "- RightAnkle: X=flex up(-)/point down(+), Y=0, Z=0\n"
+        "- LeftAnkle: X=flex up(-)/point down(+), Y=0, Z=0\n\n"
+        "RULES:\n"
+        "- Rest pose is all zeros [0, 0, 0]\n"
+        "- Keep animations between 1-4 seconds duration\n"
+        "- Use 4-8 keyframes for smooth motion\n"
+        "- First keyframe should be at time 0\n"
+        "- Last keyframe time should equal the duration\n"
+        "- Set loop: true for repeating animations (dance, idle, breathing) and loop: false for one-shots (wave, bow, punch)\n"
+        "- Use realistic joint angle ranges: shoulders -180 to 180, elbows 0-140, knees 0-140, neck -40 to 40\n"
+        "- Animate multiple joints together for natural-looking motion\n"
+        "- For walking/dancing, alternate left and right sides with phase offsets\n"
+        "- Return to rest pose (or near it) at the end for non-looping animations\n"
+        "- The name field should describe the animation (e.g. 'Wave Hello', 'Happy Dance', 'Idle Breathing')\n"
+    ),
 }
 
 # Style prompts — layered on top of base system prompt to change construction aesthetics

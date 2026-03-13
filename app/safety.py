@@ -206,10 +206,78 @@ def _check_middle_finger(parts: list[dict]) -> bool:
     return False
 
 
+def _validate_animation_output(result: dict) -> dict | None:
+    """Validate animation keyframe output. Returns sanitized result or None if invalid."""
+    keyframes = result.get("keyframes")
+    if not isinstance(keyframes, list) or len(keyframes) == 0:
+        return None
+
+    # Validate duration
+    duration = result.get("duration")
+    if not isinstance(duration, (int, float)) or duration <= 0:
+        result["duration"] = 2.0
+    result["duration"] = max(0.5, min(10.0, float(result["duration"])))
+
+    # Validate loop flag
+    if not isinstance(result.get("loop"), bool):
+        result["loop"] = False
+
+    # Sanitize keyframes
+    valid_joints = {
+        "Neck", "Waist",
+        "RightShoulder", "LeftShoulder", "RightElbow", "LeftElbow",
+        "RightWrist", "LeftWrist",
+        "RightHip", "LeftHip", "RightKnee", "LeftKnee",
+        "RightAnkle", "LeftAnkle", "Root",
+    }
+    sanitized_kf = []
+    for kf in keyframes:
+        if not isinstance(kf, dict):
+            continue
+        time = kf.get("time")
+        if not isinstance(time, (int, float)):
+            continue
+        time = max(0, min(result["duration"], float(time)))
+
+        joints = kf.get("joints")
+        if not isinstance(joints, dict):
+            continue
+
+        sanitized_joints = {}
+        for joint_name, angles in joints.items():
+            if joint_name not in valid_joints:
+                continue
+            if not isinstance(angles, list) or len(angles) < 3:
+                continue
+            # Clamp angles to -180..180
+            sanitized_joints[joint_name] = [
+                max(-180, min(180, float(a))) for a in angles[:3]
+            ]
+
+        if sanitized_joints:
+            sanitized_kf.append({"time": time, "joints": sanitized_joints})
+
+    if not sanitized_kf:
+        return None
+
+    result["keyframes"] = sanitized_kf
+
+    # Sanitize name
+    name = result.get("name", "")
+    if isinstance(name, str):
+        result["name"] = re.sub(r"[^a-zA-Z0-9\s\-'.,!?&]", "", name)[:50]
+
+    return result
+
+
 def validate_output(result: dict) -> dict | None:
     """Validate LLM output. Returns sanitized result or None if invalid."""
     if not isinstance(result, dict):
         return None
+
+    # Animation output has keyframes instead of parts
+    if "keyframes" in result and "parts" not in result:
+        return _validate_animation_output(result)
 
     # Must have parts list
     parts = result.get("parts")

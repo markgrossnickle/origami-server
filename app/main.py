@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
 
-CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop"]
+CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop", "animation"]
 StyleType = Literal[
     "origami", "lowpoly", "voxel", "balloon", "wireframe",
     "crystal", "plush", "steampunk", "pixel", "neon", "freestyle",
