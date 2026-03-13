@@ -2,13 +2,29 @@ import json
 import logging
 
 import anthropic
+import openai
+from google import genai
 
-from app.config import ANTHROPIC_API_KEY, CATEGORY_PROMPTS, FALLBACK_MODEL, MAX_TOKENS, MODEL, MODELS, SCENE_PLANNER_PROMPT, STYLE_PROMPTS
+from app.config import (
+    ANTHROPIC_API_KEY,
+    CATEGORY_PROMPTS,
+    GOOGLE_API_KEY,
+    KIMI_API_KEY,
+    KIMI_BASE_URL,
+    MAX_TOKENS,
+    MODELS,
+    OPENAI_API_KEY,
+    SCENE_PLANNER_PROMPT,
+    STYLE_PROMPTS,
+)
 from app.safety import validate_output
 
 logger = logging.getLogger(__name__)
 
-client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+openai_client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
+google_client = genai.Client(api_key=GOOGLE_API_KEY)
+kimi_client = openai.AsyncOpenAI(api_key=KIMI_API_KEY, base_url=KIMI_BASE_URL)
 
 SYSTEM_PROMPT = """You are a 3D model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts.
 
@@ -140,25 +156,99 @@ def _extract_json(text: str) -> dict:
     raise json.JSONDecodeError("No valid JSON found in response", text, 0)
 
 
-async def _call_llm(prompt: str, model: str, system: str, category: str | None = None) -> dict:
-    """Make one LLM call and parse the JSON response. Raises on failure."""
+async def _call_anthropic(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
+    """Call Anthropic Claude API and parse JSON response."""
     if category == "animation":
         user_message = f"Create a keyframe animation for: {prompt}"
     else:
         user_message = f"Create an origami model of: {prompt}"
 
-    message = await client.messages.create(
-        model=model,
+    message = await anthropic_client.messages.create(
+        model=model_id,
         max_tokens=MAX_TOKENS,
         system=system,
         messages=[{"role": "user", "content": user_message}],
     )
 
     if message.stop_reason == "max_tokens":
-        logger.warning("Response truncated at max_tokens (%s) for model %s", MAX_TOKENS, model)
+        logger.warning("Response truncated at max_tokens (%s) for model %s", MAX_TOKENS, model_id)
 
     text = message.content[0].text.strip()
     return _extract_json(text)
+
+
+async def _call_openai(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
+    """Call OpenAI API and parse JSON response."""
+    if category == "animation":
+        user_message = f"Create a keyframe animation for: {prompt}"
+    else:
+        user_message = f"Create an origami model of: {prompt}"
+
+    response = await openai_client.chat.completions.create(
+        model=model_id,
+        max_tokens=MAX_TOKENS,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_message},
+        ],
+    )
+
+    text = response.choices[0].message.content.strip()
+    return _extract_json(text)
+
+
+async def _call_google(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
+    """Call Google Gemini API and parse JSON response."""
+    if category == "animation":
+        user_message = f"Create a keyframe animation for: {prompt}"
+    else:
+        user_message = f"Create an origami model of: {prompt}"
+
+    response = await google_client.aio.models.generate_content(
+        model=model_id,
+        contents=user_message,
+        config=genai.types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=MAX_TOKENS,
+        ),
+    )
+
+    text = response.text.strip()
+    return _extract_json(text)
+
+
+async def _call_openai_compat(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
+    """Call OpenAI-compatible API (Kimi) and parse JSON response."""
+    if category == "animation":
+        user_message = f"Create a keyframe animation for: {prompt}"
+    else:
+        user_message = f"Create an origami model of: {prompt}"
+
+    response = await kimi_client.chat.completions.create(
+        model=model_id,
+        max_tokens=MAX_TOKENS,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_message},
+        ],
+    )
+
+    text = response.choices[0].message.content.strip()
+    return _extract_json(text)
+
+
+async def _call_llm(prompt: str, provider: str, model_id: str, system: str, category: str | None = None) -> dict:
+    """Route to the correct provider and parse JSON response."""
+    if provider == "anthropic":
+        return await _call_anthropic(prompt, model_id, system, category)
+    elif provider == "openai":
+        return await _call_openai(prompt, model_id, system, category)
+    elif provider == "google":
+        return await _call_google(prompt, model_id, system, category)
+    elif provider == "openai_compat":
+        return await _call_openai_compat(prompt, model_id, system, category)
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
 
 
 async def generate_model(
@@ -171,12 +261,15 @@ async def generate_model(
     """Generate an origami model description from a text prompt."""
     system = _build_system_prompt(category, raw, style)
 
-    primary, fallback = MODELS.get(model, (MODEL, FALLBACK_MODEL))
+    entry = MODELS.get(model)
+    if not entry:
+        return {"error": "invalid_model"}
+    provider, primary, fallback = entry
     models_to_try = [primary] if fallback is None else [primary, fallback]
 
     for attempt, model_id in enumerate(models_to_try):
         try:
-            result = await _call_llm(prompt, model_id, system, category=category)
+            result = await _call_llm(prompt, provider, model_id, system, category=category)
 
             if "error" in result:
                 return {"error": result["error"]}
@@ -204,7 +297,7 @@ async def generate_model(
                 continue
             logger.warning("Model %s returned invalid JSON. Raw: %s", model_id, e.doc[:500] if e.doc else "empty")
             return {"error": "generation_failed"}
-        except anthropic.APIError as e:
+        except (anthropic.APIError, openai.APIError) as e:
             if attempt == 0 and len(models_to_try) > 1:
                 logger.warning("%s API error (%s), falling back", model_id, e)
                 continue
@@ -285,23 +378,15 @@ async def generate_scene(
     model: str = "sonnet",
 ) -> dict:
     """Generate a scene plan from a world/environment description."""
-    primary, fallback = MODELS.get(model, (MODEL, FALLBACK_MODEL))
+    entry = MODELS.get(model)
+    if not entry:
+        return {"error": "invalid_model"}
+    provider, primary, fallback = entry
     models_to_try = [primary] if fallback is None else [primary, fallback]
 
     for attempt, model_id in enumerate(models_to_try):
         try:
-            message = await client.messages.create(
-                model=model_id,
-                max_tokens=MAX_TOKENS,
-                system=SCENE_PLANNER_PROMPT,
-                messages=[{"role": "user", "content": f"Plan a scene: {prompt}"}],
-            )
-
-            if message.stop_reason == "max_tokens":
-                logger.warning("Scene plan truncated at max_tokens for model %s", model_id)
-
-            text = message.content[0].text.strip()
-            result = _extract_json(text)
+            result = await _call_llm(prompt, provider, model_id, SCENE_PLANNER_PROMPT)
 
             if "error" in result:
                 return {"error": result["error"]}
@@ -326,7 +411,7 @@ async def generate_scene(
                 continue
             logger.warning("Model %s returned invalid scene JSON", model_id)
             return {"error": "scene_planning_failed"}
-        except anthropic.APIError as e:
+        except (anthropic.APIError, openai.APIError) as e:
             if attempt == 0 and len(models_to_try) > 1:
                 logger.warning("%s API error during scene planning (%s), falling back", model_id, e)
                 continue

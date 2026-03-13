@@ -20,7 +20,7 @@ StyleType = Literal[
     "origami", "lowpoly", "voxel", "balloon", "wireframe",
     "crystal", "plush", "steampunk", "pixel", "neon", "freestyle",
 ]
-ModelType = Literal["haiku", "sonnet", "opus"]
+ModelType = Literal["haiku", "sonnet", "opus", "flash_lite", "gpt4o_mini", "kimi"]
 
 
 def verify_api_key(x_api_key: str = Header()):

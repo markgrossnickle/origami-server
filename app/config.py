@@ -1,19 +1,24 @@
 import os
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+KIMI_API_KEY = os.environ.get("KIMI_API_KEY", "")
+KIMI_BASE_URL = os.environ.get("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
 API_KEY = os.environ.get("API_KEY", "")
 
 # Model config
-MODEL = "claude-haiku-4-5-20251001"
-FALLBACK_MODEL = "claude-sonnet-4-20250514"
 MAX_TOKENS = 4096
 API_TIMEOUT = 30  # seconds
 
-# Model selection map: short name -> (model_id, fallback_model_id or None)
+# Model selection map: short name -> (provider, model_id, fallback_model_id or None)
 MODELS = {
-    "haiku": (MODEL, FALLBACK_MODEL),           # default: haiku with sonnet fallback
-    "sonnet": ("claude-sonnet-4-20250514", None),
-    "opus": ("claude-opus-4-6", None),
+    "haiku": ("anthropic", "claude-haiku-4-5-20251001", None),
+    "sonnet": ("anthropic", "claude-sonnet-4-20250514", None),
+    "opus": ("anthropic", "claude-opus-4-6", None),
+    "flash_lite": ("google", "gemini-2.5-flash-lite", None),
+    "gpt4o_mini": ("openai", "gpt-4o-mini", None),
+    "kimi": ("openai_compat", "kimi-k2.5", None),
 }
 
 # Rate limiting
