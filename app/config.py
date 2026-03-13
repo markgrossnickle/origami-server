@@ -205,15 +205,14 @@ STYLE_PROMPTS = {
         "Add 2-3 small Neon parts inside as inner glow cores (transparency 0, bright color). "
         "The overall shape should look like a crystalline/geode formation of the subject."
     ),
-    "plush": (
-        "STYLE — Plush (soft stuffed animal):\n"
-        "Build with Ball parts for main body and rounded Block parts for connecting pieces. "
-        "Everything should look soft, puffy, and huggable — generous sizes, no sharp edges. No Wedge parts. "
-        "Use Fabric material on all parts for a soft textile look. Use 15-30 parts. "
-        "Colors: warm pastels — soft pink [240,180,190], cream [250,240,220], "
-        "baby blue [170,200,230], light lavender [210,190,230], peach [250,210,180]. "
-        "Transparency 0. Add small Ball parts for button eyes (dark [30,30,30], size ~0.4 studs). "
-        "Parts should overlap slightly to look stuffed and plump. Think teddy bear, plushie, Squishmallow."
+    "plastic": (
+        "STYLE — Plastic (smooth toy figurine):\n"
+        "Build to look like a glossy plastic toy or action figure — clean surfaces, bold shapes, slightly stylized proportions. "
+        "Use SmoothPlastic material on ALL parts. Mix Block, Ball, and Cylinder shapes for clean geometric construction. "
+        "Use 15-30 parts. Edges should feel manufactured and precise, not organic. "
+        "Colors: saturated toy-box palette — bright red [220,40,40], royal blue [30,80,200], "
+        "sunny yellow [250,210,40], vivid green [40,180,60], clean white [240,240,240], jet black [30,30,30]. "
+        "Transparency 0. Think LEGO, Playmobil, vinyl toy — smooth, shiny, collectible."
     ),
     "steampunk": (
         "STYLE — Steampunk (industrial Victorian):\n"
