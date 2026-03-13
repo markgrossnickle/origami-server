@@ -1,9 +1,7 @@
 import json
 import logging
 
-import anthropic
-import openai
-from google import genai
+import httpx
 
 from app.config import (
     ANTHROPIC_API_KEY,
@@ -21,10 +19,42 @@ from app.safety import validate_output
 
 logger = logging.getLogger(__name__)
 
-anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
-openai_client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
-google_client = genai.Client(api_key=GOOGLE_API_KEY)
-kimi_client = openai.AsyncOpenAI(api_key=KIMI_API_KEY, base_url=KIMI_BASE_URL)
+# Lazy-loaded clients — only created on first use to save memory
+_anthropic_client = None
+_openai_client = None
+_kimi_client = None
+_http_client = None  # Shared httpx client for Google Gemini REST API
+
+
+def _get_anthropic_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        import anthropic
+        _anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    return _anthropic_client
+
+
+def _get_openai_client():
+    global _openai_client
+    if _openai_client is None:
+        import openai
+        _openai_client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
+    return _openai_client
+
+
+def _get_kimi_client():
+    global _kimi_client
+    if _kimi_client is None:
+        import openai
+        _kimi_client = openai.AsyncOpenAI(api_key=KIMI_API_KEY, base_url=KIMI_BASE_URL)
+    return _kimi_client
+
+
+def _get_http_client():
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(timeout=60.0)
+    return _http_client
 
 SYSTEM_PROMPT = """You are a 3D model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts.
 
@@ -156,18 +186,22 @@ def _extract_json(text: str) -> dict:
     raise json.JSONDecodeError("No valid JSON found in response", text, 0)
 
 
+def _user_message(prompt: str, category: str | None = None) -> str:
+    if category == "animation":
+        return f"Create a keyframe animation for: {prompt}"
+    return f"Create an origami model of: {prompt}"
+
+
 async def _call_anthropic(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
     """Call Anthropic Claude API and parse JSON response."""
-    if category == "animation":
-        user_message = f"Create a keyframe animation for: {prompt}"
-    else:
-        user_message = f"Create an origami model of: {prompt}"
+    import anthropic
 
-    message = await anthropic_client.messages.create(
+    client = _get_anthropic_client()
+    message = await client.messages.create(
         model=model_id,
         max_tokens=MAX_TOKENS,
         system=system,
-        messages=[{"role": "user", "content": user_message}],
+        messages=[{"role": "user", "content": _user_message(prompt, category)}],
     )
 
     if message.stop_reason == "max_tokens":
@@ -179,17 +213,13 @@ async def _call_anthropic(prompt: str, model_id: str, system: str, category: str
 
 async def _call_openai(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
     """Call OpenAI API and parse JSON response."""
-    if category == "animation":
-        user_message = f"Create a keyframe animation for: {prompt}"
-    else:
-        user_message = f"Create an origami model of: {prompt}"
-
-    response = await openai_client.chat.completions.create(
+    client = _get_openai_client()
+    response = await client.chat.completions.create(
         model=model_id,
         max_tokens=MAX_TOKENS,
         messages=[
             {"role": "system", "content": system},
-            {"role": "user", "content": user_message},
+            {"role": "user", "content": _user_message(prompt, category)},
         ],
     )
 
@@ -198,38 +228,41 @@ async def _call_openai(prompt: str, model_id: str, system: str, category: str | 
 
 
 async def _call_google(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
-    """Call Google Gemini API and parse JSON response."""
-    if category == "animation":
-        user_message = f"Create a keyframe animation for: {prompt}"
-    else:
-        user_message = f"Create an origami model of: {prompt}"
+    """Call Google Gemini REST API directly (no SDK — saves ~120MB RAM)."""
+    client = _get_http_client()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent"
 
-    response = await google_client.aio.models.generate_content(
-        model=model_id,
-        contents=user_message,
-        config=genai.types.GenerateContentConfig(
-            system_instruction=system,
-            max_output_tokens=MAX_TOKENS,
-        ),
-    )
+    payload = {
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": [{"parts": [{"text": _user_message(prompt, category)}]}],
+        "generationConfig": {"maxOutputTokens": MAX_TOKENS},
+    }
 
-    text = response.text.strip()
+    response = await client.post(url, params={"key": GOOGLE_API_KEY}, json=payload)
+    response.raise_for_status()
+    data = response.json()
+
+    # Extract text from Gemini response
+    candidates = data.get("candidates", [])
+    if not candidates:
+        raise ValueError("Gemini returned no candidates")
+    parts = candidates[0].get("content", {}).get("parts", [])
+    if not parts:
+        raise ValueError("Gemini returned empty parts")
+
+    text = parts[0].get("text", "").strip()
     return _extract_json(text)
 
 
 async def _call_openai_compat(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
     """Call OpenAI-compatible API (Kimi) and parse JSON response."""
-    if category == "animation":
-        user_message = f"Create a keyframe animation for: {prompt}"
-    else:
-        user_message = f"Create an origami model of: {prompt}"
-
-    response = await kimi_client.chat.completions.create(
+    client = _get_kimi_client()
+    response = await client.chat.completions.create(
         model=model_id,
         max_tokens=MAX_TOKENS,
         messages=[
             {"role": "system", "content": system},
-            {"role": "user", "content": user_message},
+            {"role": "user", "content": _user_message(prompt, category)},
         ],
     )
 
@@ -297,13 +330,15 @@ async def generate_model(
                 continue
             logger.warning("Model %s returned invalid JSON. Raw: %s", model_id, e.doc[:500] if e.doc else "empty")
             return {"error": "generation_failed"}
-        except (anthropic.APIError, openai.APIError) as e:
-            if attempt == 0 and len(models_to_try) > 1:
-                logger.warning("%s API error (%s), falling back", model_id, e)
-                continue
-            logger.warning("Model %s API error: %s", model_id, e)
-            return {"error": "api_error"}
-        except Exception:
+        except Exception as e:
+            # Check if it's a known API error from any provider
+            err_type = type(e).__name__
+            if "APIError" in err_type or "HTTPStatusError" in err_type:
+                if attempt == 0 and len(models_to_try) > 1:
+                    logger.warning("%s API error (%s), falling back", model_id, e)
+                    continue
+                logger.warning("Model %s API error: %s", model_id, e)
+                return {"error": "api_error"}
             logger.exception("Unexpected error in generate_model")
             return {"error": "internal_error"}
 
@@ -411,13 +446,14 @@ async def generate_scene(
                 continue
             logger.warning("Model %s returned invalid scene JSON", model_id)
             return {"error": "scene_planning_failed"}
-        except (anthropic.APIError, openai.APIError) as e:
-            if attempt == 0 and len(models_to_try) > 1:
-                logger.warning("%s API error during scene planning (%s), falling back", model_id, e)
-                continue
-            logger.warning("Model %s API error during scene planning: %s", model_id, e)
-            return {"error": "api_error"}
-        except Exception:
+        except Exception as e:
+            err_type = type(e).__name__
+            if "APIError" in err_type or "HTTPStatusError" in err_type:
+                if attempt == 0 and len(models_to_try) > 1:
+                    logger.warning("%s API error during scene planning (%s), falling back", model_id, e)
+                    continue
+                logger.warning("Model %s API error during scene planning: %s", model_id, e)
+                return {"error": "api_error"}
             logger.exception("Unexpected error in generate_scene")
             return {"error": "internal_error"}
 

@@ -95,22 +95,25 @@ async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
     if request.model not in MODELS:
         return GenerateResponse(success=False, error="invalid_model")
 
-    # TODO: Re-enable cache after testing
-    # cache_key = f"{request.prompt}:{request.category or ''}:{request.style}:{request.model}:{'raw' if request.raw else ''}"
-    # cached = get_cached(cache_key)
-    # if cached:
-    #     return GenerateResponse(
-    #         success=True,
-    #         model=cached,
-    #         category_hint=cached.get("category_hint"),
-    #         model_used=cached.get("model_used"),
-    #     )
+    # Check cache
+    cache_key = f"{request.prompt}:{request.category or ''}:{request.style}:{request.model}:{'raw' if request.raw else ''}"
+    cached = get_cached(cache_key)
+    if cached:
+        return GenerateResponse(
+            success=True,
+            model=cached,
+            category_hint=cached.get("category_hint"),
+            model_used=cached.get("model_used"),
+        )
 
     # Generate via LLM
     result = await generate_model(request.prompt, category=request.category, style=request.style, raw=request.raw, model=request.model)
 
     if "error" in result:
         return GenerateResponse(success=False, error=result["error"])
+
+    # Cache successful results
+    set_cached(cache_key, result)
 
     return GenerateResponse(
         success=True,
