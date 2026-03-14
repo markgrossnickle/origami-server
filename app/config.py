@@ -21,8 +21,6 @@ MODELS = {
 # Rate limiting
 RATE_LIMIT_BURST_SECONDS = 1  # 1 request per N seconds
 RATE_LIMIT_HOURLY = 20  # max requests per hour per player
-RATE_LIMIT_DM_BURST_SECONDS = 2  # DM mode: faster burst for scene building
-RATE_LIMIT_DM_HOURLY = 100  # DM mode: higher hourly limit
 
 # Category prompt additions — describe structure/anatomy, NOT construction technique (style prompt handles that)
 CATEGORY_PROMPTS = {
@@ -66,10 +64,16 @@ CATEGORY_PROMPTS = {
     ),
     "vehicle": (
         "Rideable vehicle or transport the player will sit in and drive. "
-        "IMPORTANT: center the model at [0,0,0]. Leave a gap/opening near the center for "
-        "an invisible driver seat (don't create the seat — the game adds it automatically). "
-        "Body should surround where a seated player would be. 6-8 studs tall, 12-16 studs long. "
-        "Suggest animation: none (vehicle is physics-driven by the player)."
+        "Center at [0,0,0]. Leave a gap near center for invisible driver seat (game adds it). "
+        "6-8 studs tall, 12-16 long. Suggest animation: none.\n\n"
+        "ATTRIBUTES (set in \"attributes\" dict):\n"
+        "- Speed (number 10-120): top speed in studs/sec. Default 50. Fast car=100, slow cart=20.\n"
+        "- Torque (number 10-100): acceleration force. Default 40.\n"
+        "- TurnSpeed (number 2-15): steering responsiveness. Default 8.\n"
+        "- CanFly (bool): true if vehicle can fly. Adds vertical thrust on jump key.\n"
+        "- FlySpeed (number 10-60): vertical climb speed when flying. Default 30.\n\n"
+        "Example: a rocket ship → Speed=100, Torque=80, CanFly=true, FlySpeed=50\n"
+        "Example: a wooden cart → Speed=20, Torque=15, TurnSpeed=5"
     ),
     "building": (
         "Architecture or structure. Flat bottom, vertical build. "
@@ -77,17 +81,44 @@ CATEGORY_PROMPTS = {
         "Suggest animation: none or breathe for magical buildings."
     ),
     "tool": (
-        "Handheld tool or item the player will hold. 3-5 studs total size. "
-        "IMPORTANT: center the model at [0,0,0] with the grip/handle at the bottom (negative Y) "
-        "and the functional end at the top (positive Y). This will be converted to a Roblox Tool. "
-        "Suggest animation: none (tool moves with player hand)."
+        "Handheld tool or item the player holds. 3-5 studs total. "
+        "Center at [0,0,0], grip at bottom (negative Y), functional end at top (positive Y). "
+        "Suggest animation: none.\n\n"
+        "ATTRIBUTES (set in \"attributes\" dict):\n"
+        "- Cooldown (number 0.1-3): seconds between clicks. Default 0.5.\n"
+        "- OnClick (list of action dicts): what happens when clicked. Actions execute in order.\n\n"
+        "AVAILABLE ACTIONS:\n"
+        "- {action:'spawn', shape:'Ball'|'Block'|'Cylinder', size:0.2-2, color:[r,g,b], material:'Neon'|'Glass'|'SmoothPlastic', "
+        "transparency:0-0.8, speed:20-200, count:1-8, spread:0-30, lifetime:1-5, gravity:true|false}\n"
+        "  Fires projectile(s). count>1 fires a burst. spread = cone angle in degrees. gravity=false for lasers.\n"
+        "- {action:'raycast', range:5-50}  Hit-scan (invisible). Sets the target for following actions.\n"
+        "- {action:'destroy', radius:0-8}  Break the target. radius>0 = area effect.\n"
+        "- {action:'force', magnitude:10-200, direction:'forward'|'up'|'away'}  Push target.\n"
+        "- {action:'recolor', color:[r,g,b], material:'Ice'|'Neon'|'Glass'|...}  Change target appearance.\n"
+        "- {action:'anchor', freeze:true|false}  Freeze or unfreeze target in place.\n"
+        "- {action:'resize', scale:0.3-3}  Grow or shrink target.\n\n"
+        "EXAMPLES:\n"
+        "Hammer: OnClick=[{action:'raycast',range:10},{action:'destroy',radius:3}], Cooldown=0.3\n"
+        "Squirt gun: OnClick=[{action:'spawn',shape:'Ball',size:0.3,color:[100,180,255],material:'Glass',transparency:0.3,speed:80,count:5,spread:15,lifetime:2,gravity:true}]\n"
+        "Freeze ray: OnClick=[{action:'raycast',range:30},{action:'anchor',freeze:true},{action:'recolor',color:[150,220,255],material:'Ice'}]\n"
+        "Gravity gun: OnClick=[{action:'raycast',range:30},{action:'force',magnitude:150,direction:'up'}]\n"
+        "Magic wand: OnClick=[{action:'spawn',shape:'Ball',size:0.5,color:[255,200,50],material:'Neon',speed:100,count:1,lifetime:5,gravity:false},{action:'destroy',radius:2}]\n"
+        "Growth ray: OnClick=[{action:'raycast',range:40},{action:'resize',scale:2}]\n"
+        "Paint gun: OnClick=[{action:'spawn',shape:'Ball',size:0.3,color:[255,50,50],material:'SmoothPlastic',speed:120,count:1,lifetime:3,gravity:true},{action:'recolor',color:[255,50,50]}]"
     ),
     "hat": (
-        "Wearable hat that sits on top of a player's head. Keep it SMALL: 1-2 studs tall, 2-3 studs wide max. "
-        "The player's head is only ~1.2 studs wide, so the hat must be proportional. "
-        "IMPORTANT: center at [0,0,0]. ALL parts must be at y >= 0 (nothing below the head). "
-        "Build upward from y=0. 5-12 parts. "
-        "Suggest animation: none (hat moves with player head)."
+        "Wearable hat on player's head. 1-2 studs tall, 2-3 studs wide. "
+        "Center at [0,0,0], all parts y>=0. 5-12 parts. Suggest animation: none.\n\n"
+        "ATTRIBUTES (set in \"attributes\" dict) — optional interactive behavior:\n"
+        "- HatEffect (string): 'fly' (upward force on key hold), 'speed' (run faster while worn), 'glow' (parts emit light on key)\n"
+        "- EffectKey (string): key that activates effect: 'Space', 'E', 'Q'. Default 'Space'.\n"
+        "- FlyForce (number 10-80): upward force for fly effect. Default 40.\n"
+        "- SpeedBoost (number 1.2-3.0): walk speed multiplier for speed effect. Default 1.5.\n"
+        "- SpinParts (string): name prefix of parts that spin when effect active (e.g. 'propeller').\n"
+        "- SpinSpeed (number 90-1440): degrees per second for spinning parts. Default 720.\n\n"
+        "Example: propeller hat → HatEffect='fly', FlyForce=40, EffectKey='Space', SpinParts='propeller', SpinSpeed=720\n"
+        "Example: speed crown → HatEffect='speed', SpeedBoost=1.8\n"
+        "Not every hat needs an effect — a top hat or cowboy hat can be purely cosmetic (no attributes needed)."
     ),
     "prop": (
         "Decorative object or prop. 2-8 studs. Sits on ground or table. "
@@ -252,48 +283,3 @@ STYLE_PROMPTS = {
         "boxy things should be boxy, translucent things should use Glass. Trust your judgment."
     ),
 }
-
-# Scene planner system prompt — decomposes a world description into placeable items
-SCENE_PLANNER_PROMPT = """You are a scene planner for a 3D Roblox game. Given a world or environment description, break it down into individual 3D items that can be built separately and placed in the world.
-
-RULES:
-- Break the description into 3-15 individual items
-- Each item needs a short description (what to generate), a category, and a position
-- Positions are relative to [0, 0, 0] center, in Roblox studs (1 stud ≈ 0.3 meters)
-- Keep all items within a 60-stud radius of center
-- Space items at least 8-10 studs apart so they don't overlap
-- Y position should be 0 for ground-level items (the game handles ground placement)
-
-CATEGORIES (pick the most appropriate for each item):
-- "creature" — living things: animals, monsters, NPCs, enemies
-- "building" — architecture: towers, houses, walls, bridges, gates
-- "prop" — decorative objects: trees, rocks, chests, barrels, signs, furniture
-- "vehicle" — rideable: carts, boats, carriages
-
-ENEMY MARKING:
-- Set "enemy": true on hostile creatures (monsters, guards, attackers)
-- Set "enemy": false on friendly/neutral creatures (pets, townsfolk, passive animals)
-- Non-creature items should NOT have the "enemy" field
-
-SPATIAL LAYOUT:
-- Think about the scene spatially — buildings in back, props scattered around, creatures patrolling
-- Creatures should be near relevant structures (guards near gates, animals near dens)
-- Props fill the environment (trees, rocks, furniture, decorations)
-- rotation_y is in degrees (0-360), used to face items toward interesting directions
-
-SCENE NAMING:
-- Give the scene a short evocative name (2-4 words)
-
-Return ONLY valid JSON in this exact format:
-{
-  "name": "Haunted Forest",
-  "items": [
-    { "description": "A tall dead oak tree with twisted branches", "category": "prop", "position": [0, 0, -15], "rotation_y": 0 },
-    { "description": "A crumbling stone guard tower", "category": "building", "position": [20, 0, 10], "rotation_y": 45 },
-    { "description": "A skeleton warrior holding a rusty sword", "category": "creature", "position": [-10, 0, 5], "rotation_y": 90, "enemy": true },
-    { "description": "A glowing treasure chest", "category": "prop", "position": [5, 0, 0], "rotation_y": 0 }
-  ]
-}
-
-DO NOT include model parts, shapes, or colors — only the plan. Each item will be generated as a full 3D model separately.
-Generate child-friendly content. Fantasy creatures (skeletons, zombies, ghosts, dragons) are fine — this is a game!"""

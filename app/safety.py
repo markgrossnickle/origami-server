@@ -54,8 +54,8 @@ INJECTION_PATTERNS = [
 _blocked_re = re.compile("|".join(BLOCKED_PATTERNS), re.IGNORECASE)
 _injection_re = re.compile("|".join(INJECTION_PATTERNS), re.IGNORECASE)
 
-# Only allow safe characters: letters, numbers, spaces, and basic punctuation
-_safe_chars_re = re.compile(r"^[a-zA-Z0-9\s\-'.,!?&]+$")
+# Only allow safe characters: letters, spaces, periods, and commas
+_safe_chars_re = re.compile(r"^[a-zA-Z\s.,]+$")
 
 MAX_INPUT_LENGTH = 100
 

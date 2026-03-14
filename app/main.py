@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from app.cache import get_cached, set_cached
 from app.catalog import add_to_catalog, get_catalog_item, get_catalog_list, init_db
 from app.config import API_KEY, CATEGORY_PROMPTS, MODELS, STYLE_PROMPTS
-from app.generator import generate_model, generate_scene
+from app.generator import generate_model
 from app.rate_limit import check_rate_limit
 from app.safety import validate_input
 
@@ -43,7 +43,6 @@ class GenerateRequest(BaseModel):
     style: StyleType = "origami"
     model: ModelType = "haiku"
     raw: bool = False
-    dm_mode: bool = False
 
 
 class GenerateResponse(BaseModel):
@@ -54,20 +53,6 @@ class GenerateResponse(BaseModel):
     model_used: str | None = None
 
 
-class SceneRequest(BaseModel):
-    prompt: str
-    player_id: str
-    style: StyleType = "origami"
-    model: ModelType = "sonnet"
-
-
-class SceneResponse(BaseModel):
-    success: bool
-    scene: dict | None = None
-    error: str | None = None
-    model_used: str | None = None
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -75,10 +60,10 @@ async def health():
 
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
-    logger.info("Generate request from %s: %s (dm_mode=%s)", request.player_id, request.prompt, request.dm_mode)
+    logger.info("Generate request from %s: %s", request.player_id, request.prompt)
 
-    # Rate limit check (DM mode uses relaxed limits for scene building)
-    rate_error = check_rate_limit(request.player_id, dm_mode=request.dm_mode)
+    # Rate limit check
+    rate_error = check_rate_limit(request.player_id)
     if rate_error:
         logger.warning("Rate limited %s: %s", request.player_id, rate_error)
         return GenerateResponse(success=False, error=rate_error)
@@ -135,39 +120,6 @@ async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
         success=True,
         model=result,
         category_hint=result.get("category_hint"),
-        model_used=result.get("model_used"),
-    )
-
-
-@app.post("/api/generate-scene", response_model=SceneResponse)
-async def generate_scene_endpoint(request: SceneRequest, _: None = Depends(verify_api_key)):
-    logger.info("Scene request from %s: %s", request.player_id, request.prompt)
-
-    # Rate limit check (uses DM rate limits)
-    rate_error = check_rate_limit(request.player_id, dm_mode=True)
-    if rate_error:
-        logger.warning("Rate limited %s: %s", request.player_id, rate_error)
-        return SceneResponse(success=False, error=rate_error)
-
-    # Safety check
-    safety_error = validate_input(request.prompt)
-    if safety_error:
-        logger.warning("Blocked scene input from %s: %s (%s)", request.player_id, request.prompt, safety_error)
-        return SceneResponse(success=False, error=safety_error)
-
-    # Validate model
-    if request.model not in MODELS:
-        return SceneResponse(success=False, error="invalid_model")
-
-    # Generate scene plan via LLM
-    result = await generate_scene(request.prompt, model=request.model)
-
-    if "error" in result:
-        return SceneResponse(success=False, error=result["error"])
-
-    return SceneResponse(
-        success=True,
-        scene=result,
         model_used=result.get("model_used"),
     )
 

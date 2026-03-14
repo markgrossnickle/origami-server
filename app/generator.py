@@ -10,7 +10,6 @@ from app.config import (
     MAX_TOKENS,
     MODELS,
     OPENAI_API_KEY,
-    SCENE_PLANNER_PROMPT,
     STYLE_PROMPTS,
 )
 from app.safety import validate_output
@@ -84,8 +83,11 @@ Response format:
   ],
   "animation": "idle_bob",
   "locomotion": "fly",
+  "attributes": {},
   "description": "A fierce dragon with angular wings"
 }
+
+"attributes" is an optional dict of key-value behavior/physics hints. See category guidance for what attributes to set for each category. Omit or leave empty if no special behavior is needed.
 
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
 Available categories: creature, avatar, vehicle, building, tool, hat, prop
@@ -313,118 +315,3 @@ async def generate_model(
             return {"error": "internal_error"}
 
     return {"error": "generation_failed"}
-
-
-def _validate_scene_plan(result: dict) -> dict | None:
-    """Validate the scene planner output. Returns sanitized result or None if invalid."""
-    if not isinstance(result, dict):
-        return None
-
-    name = result.get("name")
-    if not isinstance(name, str) or not name.strip():
-        result["name"] = "Scene"
-
-    items = result.get("items")
-    if not isinstance(items, list) or len(items) == 0:
-        return None
-
-    # Cap at 15 items
-    if len(items) > 15:
-        items = items[:15]
-
-    valid_categories = {"creature", "building", "prop", "vehicle"}
-    sanitized = []
-
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-
-        desc = item.get("description")
-        if not isinstance(desc, str) or not desc.strip():
-            continue
-
-        cat = item.get("category", "prop")
-        if cat not in valid_categories:
-            cat = "prop"
-
-        pos = item.get("position", [0, 0, 0])
-        if not isinstance(pos, list) or len(pos) < 3:
-            pos = [0, 0, 0]
-        # Clamp positions to within scene radius
-        pos = [max(-60, min(60, float(p))) for p in pos[:3]]
-
-        rotation = item.get("rotation_y", 0)
-        if not isinstance(rotation, (int, float)):
-            rotation = 0
-        rotation = float(rotation) % 360
-
-        entry = {
-            "description": desc.strip()[:100],
-            "category": cat,
-            "position": pos,
-            "rotation_y": rotation,
-        }
-
-        # Only creatures can be enemies
-        if cat == "creature":
-            entry["enemy"] = bool(item.get("enemy", False))
-
-        sanitized.append(entry)
-
-    if not sanitized:
-        return None
-
-    result["items"] = sanitized
-    return result
-
-
-async def generate_scene(
-    prompt: str,
-    model: str = "sonnet",
-) -> dict:
-    """Generate a scene plan from a world/environment description."""
-    entry = MODELS.get(model)
-    if not entry:
-        return {"error": "invalid_model"}
-    provider, primary, fallback = entry
-    models_to_try = [primary] if fallback is None else [primary, fallback]
-
-    for attempt, model_id in enumerate(models_to_try):
-        try:
-            result = await _call_llm(prompt, provider, model_id, SCENE_PLANNER_PROMPT)
-
-            if "error" in result:
-                return {"error": result["error"]}
-
-            result = _validate_scene_plan(result)
-            if result is None:
-                if attempt == 0 and len(models_to_try) > 1:
-                    logger.warning("%s scene plan failed validation, falling back", model_id)
-                    continue
-                return {"error": "scene_planning_failed"}
-
-            result["model_used"] = model_id
-            return result
-
-        except json.JSONDecodeError as e:
-            if attempt == 0 and len(models_to_try) > 1:
-                logger.warning(
-                    "%s returned invalid scene JSON, falling back. Raw: %s",
-                    model_id,
-                    e.doc[:500] if e.doc else "empty",
-                )
-                continue
-            logger.warning("Model %s returned invalid scene JSON", model_id)
-            return {"error": "scene_planning_failed"}
-        except Exception as e:
-            err_type = type(e).__name__
-            if "APIError" in err_type or "HTTPStatusError" in err_type:
-                if attempt == 0 and len(models_to_try) > 1:
-                    logger.warning("%s API error during scene planning (%s), falling back", model_id, e)
-                    continue
-                logger.warning("Model %s API error during scene planning: %s", model_id, e)
-                return {"error": "api_error"}
-            logger.exception("Unexpected error in generate_scene")
-            return {"error": "internal_error"}
-
-    return {"error": "scene_planning_failed"}
