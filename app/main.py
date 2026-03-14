@@ -18,9 +18,9 @@ app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
 CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop", "animation"]
 StyleType = Literal[
     "origami", "lowpoly", "voxel", "balloon", "wireframe",
-    "crystal", "plush", "steampunk", "pixel", "neon", "freestyle",
+    "crystal", "plastic", "steampunk", "pixel", "neon", "freestyle",
 ]
-ModelType = Literal["haiku", "sonnet", "opus", "flash_lite", "gpt4o_mini", "kimi"]
+ModelType = Literal["haiku", "sonnet", "opus", "flash_lite", "gpt4o_mini"]
 
 
 def verify_api_key(x_api_key: str = Header()):
