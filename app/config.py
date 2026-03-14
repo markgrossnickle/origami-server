@@ -3,8 +3,6 @@ import os
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-KIMI_API_KEY = os.environ.get("KIMI_API_KEY", "")
-KIMI_BASE_URL = os.environ.get("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
 API_KEY = os.environ.get("API_KEY", "")
 
 # Model config
@@ -18,7 +16,6 @@ MODELS = {
     "opus": ("anthropic", "claude-opus-4-6", None),
     "flash_lite": ("google", "gemini-2.5-flash-lite", None),
     "gpt4o_mini": ("openai", "gpt-4o-mini", None),
-    "kimi": ("openai_compat", "kimi-k2.5", None),
 }
 
 # Rate limiting
