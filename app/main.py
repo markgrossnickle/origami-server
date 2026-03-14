@@ -1,10 +1,11 @@
 import logging
 from typing import Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Header
+from fastapi import Depends, FastAPI, HTTPException, Header, Query
 from pydantic import BaseModel
 
 from app.cache import get_cached, set_cached
+from app.catalog import add_to_catalog, get_catalog_item, get_catalog_list, init_db
 from app.config import API_KEY, CATEGORY_PROMPTS, MODELS, STYLE_PROMPTS
 from app.generator import generate_model, generate_scene
 from app.rate_limit import check_rate_limit
@@ -14,6 +15,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
+
+
+@app.on_event("startup")
+async def startup():
+    init_db()
 
 CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop", "animation"]
 StyleType = Literal[
@@ -112,8 +118,18 @@ async def generate(request: GenerateRequest, _: None = Depends(verify_api_key)):
     if "error" in result:
         return GenerateResponse(success=False, error=result["error"])
 
-    # Cache successful results
-    set_cached(cache_key, result)
+    # Store in catalog for cached browsing
+    try:
+        cat = result.get("category_hint") or request.category or "prop"
+        add_to_catalog(
+            prompt=request.prompt,
+            category=cat,
+            style=request.style,
+            model_used=result.get("model_used", request.model),
+            result=result,
+        )
+    except Exception:
+        logger.exception("Failed to store in catalog (non-fatal)")
 
     return GenerateResponse(
         success=True,
@@ -154,3 +170,21 @@ async def generate_scene_endpoint(request: SceneRequest, _: None = Depends(verif
         scene=result,
         model_used=result.get("model_used"),
     )
+
+
+@app.get("/api/catalog")
+async def catalog_list(
+    search: str | None = Query(None),
+    category: str | None = Query(None),
+    _: None = Depends(verify_api_key),
+):
+    items = get_catalog_list(search=search, category=category)
+    return {"items": items}
+
+
+@app.get("/api/catalog/{item_id}")
+async def catalog_item(item_id: str, _: None = Depends(verify_api_key)):
+    item = get_catalog_item(item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item

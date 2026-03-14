@@ -7,8 +7,6 @@ from app.config import (
     ANTHROPIC_API_KEY,
     CATEGORY_PROMPTS,
     GOOGLE_API_KEY,
-    KIMI_API_KEY,
-    KIMI_BASE_URL,
     MAX_TOKENS,
     MODELS,
     OPENAI_API_KEY,
@@ -22,7 +20,6 @@ logger = logging.getLogger(__name__)
 # Lazy-loaded clients — only created on first use to save memory
 _anthropic_client = None
 _openai_client = None
-_kimi_client = None
 _http_client = None  # Shared httpx client for Google Gemini REST API
 
 
@@ -42,20 +39,11 @@ def _get_openai_client():
     return _openai_client
 
 
-def _get_kimi_client():
-    global _kimi_client
-    if _kimi_client is None:
-        import openai
-        _kimi_client = openai.AsyncOpenAI(api_key=KIMI_API_KEY, base_url=KIMI_BASE_URL)
-    return _kimi_client
-
-
 def _get_http_client():
     global _http_client
     if _http_client is None:
         _http_client = httpx.AsyncClient(timeout=60.0)
     return _http_client
-
 SYSTEM_PROMPT = """You are a 3D model generator for a Roblox game. Given a subject, return a JSON object describing how to build it from Roblox Parts.
 
 RULES:
@@ -254,22 +242,6 @@ async def _call_google(prompt: str, model_id: str, system: str, category: str | 
     return _extract_json(text)
 
 
-async def _call_openai_compat(prompt: str, model_id: str, system: str, category: str | None = None) -> dict:
-    """Call OpenAI-compatible API (Kimi) and parse JSON response."""
-    client = _get_kimi_client()
-    response = await client.chat.completions.create(
-        model=model_id,
-        max_tokens=MAX_TOKENS,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": _user_message(prompt, category)},
-        ],
-    )
-
-    text = response.choices[0].message.content.strip()
-    return _extract_json(text)
-
-
 async def _call_llm(prompt: str, provider: str, model_id: str, system: str, category: str | None = None) -> dict:
     """Route to the correct provider and parse JSON response."""
     if provider == "anthropic":
@@ -278,8 +250,6 @@ async def _call_llm(prompt: str, provider: str, model_id: str, system: str, cate
         return await _call_openai(prompt, model_id, system, category)
     elif provider == "google":
         return await _call_google(prompt, model_id, system, category)
-    elif provider == "openai_compat":
-        return await _call_openai_compat(prompt, model_id, system, category)
     else:
         raise ValueError(f"Unknown provider: {provider}")
 
