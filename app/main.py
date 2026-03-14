@@ -21,7 +21,7 @@ app = FastAPI(title="Origami Server", docs_url=None, redoc_url=None)
 async def startup():
     init_db()
 
-CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "hat", "prop", "animation"]
+CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "accessory", "prop", "animation"]
 StyleType = Literal[
     "origami", "lowpoly", "voxel", "balloon", "wireframe",
     "crystal", "plastic", "steampunk", "pixel", "neon", "freestyle",

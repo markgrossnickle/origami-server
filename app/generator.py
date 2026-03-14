@@ -90,7 +90,7 @@ Response format:
 "attributes" is an optional dict of key-value behavior/physics hints. See category guidance for what attributes to set for each category. Omit or leave empty if no special behavior is needed.
 
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
-Available categories: creature, avatar, vehicle, building, tool, hat, prop
+Available categories: creature, avatar, vehicle, building, tool, accessory, prop
 
 PART NAMING — the game animates parts based on their name prefix:
 - Body segments: seg_1, seg_2, seg_3... (body fold animation)
