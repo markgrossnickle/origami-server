@@ -23,8 +23,8 @@ async def startup():
 
 CategoryType = Literal["creature", "avatar", "vehicle", "building", "tool", "accessory", "prop", "animation"]
 StyleType = Literal[
-    "origami", "lowpoly", "voxel", "balloon", "wireframe",
-    "crystal", "plastic", "steampunk", "pixel", "neon", "freestyle",
+    "origami", "lowpoly", "voxel", "balloon", "chibi",
+    "lego", "plastic", "scifi", "spooky", "candy", "freestyle",
 ]
 ModelType = Literal["haiku", "sonnet", "opus", "flash_lite", "gpt4o_mini"]
 

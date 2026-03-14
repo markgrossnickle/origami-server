@@ -228,25 +228,26 @@ STYLE_PROMPTS = {
         "mint green [100,220,170], lavender [180,140,255]. SmoothPlastic material. Transparency 0. "
         "Parts should slightly overlap to look like twisted balloon segments."
     ),
-    "wireframe": (
-        "STYLE — Wireframe (skeletal edge outlines):\n"
-        "Build using ONLY thin Cylinder parts as edges/struts — like a wireframe 3D render. "
-        "Each cylinder should be very thin: size [0.15, LENGTH, 0.15] where LENGTH varies. "
-        "Rotate cylinders to form edges of cubes, triangles, and polygons outlining the subject's shape. "
-        "Use 20-40 cylinders. Material: Neon for all edge cylinders (they glow). "
-        "Colors: monochrome base — white [230,230,240] or light gray [180,180,190] for most edges. "
-        "Add 3-5 accent edges in a single bright color: cyan [0,220,255] or magenta [255,0,200]. "
-        "Transparency 0. The result should look like a glowing wireframe hologram."
+    "chibi": (
+        "STYLE — Chibi (cute oversized head):\n"
+        "Build in chibi/kawaii proportions — head is 40-50% of total height, body is stubby and small. "
+        "Use Ball shapes for the head and round features, Block/Cylinder for the tiny body and limbs. "
+        "Head should be 3-4 studs wide, body only 2 studs wide. Big round eyes (Ball, black [20,20,20]) with white highlight dots. "
+        "Use 15-30 parts. SmoothPlastic material. Transparency 0. "
+        "Colors: soft pastel palette — pink [255,180,200], baby blue [150,200,255], mint [170,240,200], "
+        "peach [255,210,180], lilac [200,180,240]. Add rosy cheek circles (Ball, pink, small). "
+        "Everything should look round, soft, and adorable — no sharp edges."
     ),
-    "crystal": (
-        "STYLE — Crystal (sharp angular gems):\n"
-        "Build with Wedge and Block parts arranged as sharp, angular crystal formations. "
-        "Rotate parts at dramatic angles (30, 45, 60 degrees) to create jutting facets and shard-like protrusions. "
-        "Use Glass material on most parts. Set transparency to 0.3-0.5 on glass parts. "
-        "Use 15-30 parts. Colors: cool gem tones — deep purple [100,40,160], sapphire blue [40,80,200], "
-        "teal [40,180,180], amethyst [140,60,180], ice white [200,220,240]. "
-        "Add 2-3 small Neon parts inside as inner glow cores (transparency 0, bright color). "
-        "The overall shape should look like a crystalline/geode formation of the subject."
+    "lego": (
+        "STYLE — Lego (brick-built):\n"
+        "Build to look like a LEGO model — use ONLY Block parts with sizes that are multiples of 0.8 studs "
+        "(0.8, 1.6, 2.4, 3.2). Stack blocks in a grid pattern like real LEGO bricks. "
+        "Leave tiny 0.1-stud gaps between blocks for the brick separation look. "
+        "Use 20-40 parts. SmoothPlastic material. Transparency 0. "
+        "Colors: classic LEGO palette — bright red [220,40,40], blue [30,80,200], yellow [250,210,40], "
+        "green [40,160,60], white [240,240,240], black [30,30,30], orange [230,130,30], brown [100,60,30]. "
+        "Add small flat Block studs on top surfaces (size [0.4, 0.2, 0.4]) for the signature LEGO nub look. "
+        "Build angular and blocky — everything should look like it snaps together."
     ),
     "plastic": (
         "STYLE — Plastic (smooth toy figurine):\n"
@@ -257,37 +258,33 @@ STYLE_PROMPTS = {
         "sunny yellow [250,210,40], vivid green [40,180,60], clean white [240,240,240], jet black [30,30,30]. "
         "Transparency 0. Think LEGO, Playmobil, vinyl toy — smooth, shiny, collectible."
     ),
-    "steampunk": (
-        "STYLE — Steampunk (industrial Victorian):\n"
-        "Build with Cylinder and Block parts to create mechanical, gear-and-pipe aesthetic. "
-        "Cylinders for pipes, smokestacks, pistons, gear shafts. Blocks for boiler plates and frames. "
-        "Use Foil or Metal material on structural parts (brass/copper look). SmoothPlastic for accent panels. "
-        "Use 20-35 parts. Colors: brass [180,140,60], copper [190,100,50], dark brown [80,50,30], "
-        "iron gray [90,90,100], aged bronze [140,120,70]. "
-        "Transparency 0. Add small Cylinder parts as rivets (size [0.3, 0.15, 0.3]). "
-        "Include pipes, gauges, and gear-like circular elements. Victorian industrial machinery vibe."
+    "scifi": (
+        "STYLE — Sci-Fi (futuristic tech):\n"
+        "Build with Block and Cylinder parts for a sleek futuristic look. "
+        "Use Metal material on structural panels, add Neon accent strips (thin Blocks [LENGTH, 0.15, 0.15]) along edges for tech glow. "
+        "Use 20-35 parts. Angular, clean shapes — beveled edges with small Wedge trim pieces. "
+        "Colors: gunmetal gray [80,85,95], dark navy [30,40,60], silver [180,185,195], "
+        "with 1-2 Neon accent colors: cyan [0,200,255] or orange [255,140,30]. "
+        "Transparency 0 on metal parts, 0 on neon. Think sci-fi armor, spaceships, robots."
     ),
-    "pixel": (
-        "STYLE — Pixel Art (flat 2D sprite):\n"
-        "Build a FLAT, billboard-like sprite using thin Block parts arranged like pixels. "
-        "All blocks face the same direction (thin on Z axis): size [PIXEL_SIZE, PIXEL_SIZE, 0.3] where PIXEL_SIZE is 0.6-0.8. "
-        "Arrange blocks on a grid in the XY plane — like pixel art on a canvas. Use 25-40 blocks. "
-        "Z positions should all be 0 (or very close). The model should look like a 2D sprite standing upright. "
-        "SmoothPlastic material. Transparency 0. "
-        "Colors: retro 8-bit palette — limited to 8-10 distinct colors per model. Use strong contrast. "
-        "Example palette: black [20,20,20], white [240,240,240], red [220,50,50], blue [50,80,220], "
-        "green [50,180,50], yellow [240,220,50], skin [240,190,150], brown [140,80,40]."
+    "spooky": (
+        "STYLE — Spooky (haunted horror):\n"
+        "Build with a mix of Block and Wedge parts for jagged, unsettling shapes. "
+        "Use dark SmoothPlastic for most parts. Add 2-3 Glass parts with transparency 0.4-0.6 for ghostly elements. "
+        "Add 1-2 small Neon parts (green [80,255,80] or purple [180,50,255]) for eerie glowing eyes/accents. "
+        "Use 15-30 parts. Colors: deep black [25,25,30], dark purple [50,20,60], "
+        "blood red [150,30,30], bone white [220,210,200], ghostly green [80,255,80]. "
+        "Tilt parts at slight angles (5-15 degrees) so nothing looks perfectly straight — everything slightly crooked and creepy."
     ),
-    "neon": (
-        "STYLE — Neon (cyberpunk glow):\n"
-        "Build with Block and Cylinder parts. The base/body uses dark SmoothPlastic (near-black [20,20,30]). "
-        "Add glowing outlines, trim, and accent parts using Neon material in bright colors. "
-        "For every dark structural part, add 1-2 thin Neon parts along its edges as glow strips. "
-        "Neon strips: thin Blocks [LENGTH, 0.15, 0.15] or thin Cylinders. "
-        "Use 25-40 parts (roughly half dark base, half neon accents). "
-        "Neon colors: hot pink [255,0,150], electric cyan [0,255,255], neon purple [180,0,255], "
-        "lime green [0,255,100]. Pick 1-2 neon colors per model. "
-        "Transparency 0. Neon material handles the glow. Tron/cyberpunk feel."
+    "candy": (
+        "STYLE — Candy (sweet treats):\n"
+        "Build with Ball and Cylinder shapes primarily — everything should look rounded, glossy, and edible. "
+        "Use SmoothPlastic material. Add stripe patterns by alternating colored parts. "
+        "Use 15-30 parts. Sizes should be plump and generous. "
+        "Colors: candy palette — hot pink [255,80,150], cotton candy blue [130,200,255], "
+        "lemon yellow [255,240,80], mint green [120,230,180], grape purple [180,100,255], "
+        "cream white [255,245,230]. Transparency 0. "
+        "Think gumball machines, lollipops, candy canes — sweet, shiny, and colorful."
     ),
     "freestyle": (
         "STYLE — Freestyle (your choice):\n"
