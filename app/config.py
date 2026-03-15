@@ -140,7 +140,7 @@ CATEGORY_PROMPTS = {
     ),
     "prop": (
         "Decorative object or interactive prop. 2-8 studs. Sits on ground or table. "
-        "Suggest animation: spin_slow for showcase items, idle_bob for living props.\n\n"
+        "Animation: always \"none\" — animations override physics and break constraints.\n\n"
         "CONSTRAINTS — make mechanically interactive props. anchored=false on moving parts, anchored=true on fixed parts:\n"
         "- Trampoline: base(anchored) + pad(unanchored, density=0.1) + Prismatic(axis=[0,1,0], limitsEnabled, lowerLimit=0, upperLimit=5) + LinearVelocity(part0=pad, vectorVelocity=[0,100,0], maxForce=99999)\n"
         "- Door: frame(anchored) + panel(unanchored) + Hinge(axis=[0,1,0], limitsEnabled, lowerAngle=0, upperAngle=90)\n"
