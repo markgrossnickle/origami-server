@@ -140,18 +140,15 @@ CATEGORY_PROMPTS = {
     ),
     "prop": (
         "Decorative object or interactive prop. 2-8 studs. Sits on ground or table. "
-        "Suggest animation: spin_slow for showcase items, idle_bob for living props. "
-        "Use per-part physics properties when the object should interact physically with players "
-        "(e.g. trampoline surface with high elasticity, ice rink with low friction).\n\n"
-        "CONSTRAINTS — use these to make mechanically interactive props. Set anchored=false on moving parts, "
-        "anchored=true on fixed parts, and connect them with constraints:\n"
-        "- Trampoline: anchored platform with elasticity=1.0 (bounces players). Optional: unanchored surface + Spring to anchored base for visual flex.\n"
-        "- Door: frame(anchored) + panel(unanchored) + Hinge(limitsEnabled=true, lowerAngle=0, upperAngle=90)\n"
-        "- Seesaw: post(anchored) + plank(unanchored) + Hinge at center\n"
-        "- Swing: frame(anchored) + seat(unanchored) + Rope(length=5) or BallSocket at top\n"
-        "- Conveyor belt: anchored belt + AngularVelocity(angularVelocity=[0,0,5], maxTorque=1000)\n"
-        "- Elevator: anchored shaft + unanchored platform + Prismatic(limitsEnabled=true, lowerLimit=0, upperLimit=20)\n"
-        "- Spinning fan: anchored base + unanchored blades + AngularVelocity(angularVelocity=[0,10,0], maxTorque=500)"
+        "Suggest animation: spin_slow for showcase items, idle_bob for living props.\n\n"
+        "CONSTRAINTS — make mechanically interactive props. anchored=false on moving parts, anchored=true on fixed parts:\n"
+        "- Trampoline: base(anchored) + pad(unanchored, density=0.1) + Prismatic(axis=[0,1,0], limitsEnabled, lowerLimit=0, upperLimit=5) + LinearVelocity(part0=pad, vectorVelocity=[0,100,0], maxForce=99999)\n"
+        "- Door: frame(anchored) + panel(unanchored) + Hinge(axis=[0,1,0], limitsEnabled, lowerAngle=0, upperAngle=90)\n"
+        "- Seesaw: post(anchored) + plank(unanchored, density=0.2) + Hinge(axis=[0,0,1])\n"
+        "- Swing: frame(anchored) + seat(unanchored) + Rope(length=5)\n"
+        "- Flipper: base(anchored) + arm(unanchored) + Hinge(axis=[0,0,1], actuatorType='Motor', motorSpeed=5, motorMaxTorque=10000, limitsEnabled, lowerAngle=-5, upperAngle=70)\n"
+        "- Spinner: base(anchored) + disc(unanchored) + Hinge(axis=[0,1,0]) + AngularVelocity(angularVelocity=[0,2,0], maxTorque=5000)\n"
+        "- Elevator: shaft(anchored) + platform(unanchored) + Prismatic(axis=[0,1,0], limitsEnabled, lowerLimit=-5, upperLimit=5) + LinearVelocity(vectorVelocity=[0,3,0])"
     ),
     "animation": (
         "ANIMATION MODE — You are generating a keyframe animation for an R15 humanoid mannequin, NOT a 3D model.\n"

@@ -343,8 +343,9 @@ def validate_output(result: dict) -> dict | None:
         valid_constraint_types = {
             "Spring", "Hinge", "BallSocket", "Weld", "Rod",
             "Rope", "Prismatic", "TorsionSpring", "AngularVelocity", "LinearVelocity",
+            "VectorForce",
         }
-        single_attachment_types = {"AngularVelocity", "LinearVelocity"}
+        single_attachment_types = {"AngularVelocity", "LinearVelocity", "VectorForce"}
         part_names = {p.get("name") for p in sanitized_parts if isinstance(p.get("name"), str)}
 
         sanitized_constraints = []
@@ -363,15 +364,26 @@ def validate_output(result: dict) -> dict | None:
 
             # Clamp numeric values to safe ranges
             for key in ("stiffness", "damping", "freeLength", "length",
-                        "restitution", "maxTorque", "maxForce", "maxAngle"):
+                        "restitution", "maxAngle"):
                 if key in c:
                     c[key] = max(0, min(10000, float(c[key])))
+            for key in ("maxTorque", "maxForce", "motorMaxTorque"):
+                if key in c:
+                    c[key] = max(0, min(100000, float(c[key])))
+            for key in ("motorSpeed",):
+                if key in c:
+                    c[key] = max(-50, min(50, float(c[key])))
             for key in ("lowerAngle", "upperAngle", "lowerLimit", "upperLimit"):
                 if key in c:
                     c[key] = max(-180, min(180, float(c[key])))
 
+            # Validate actuatorType
+            if "actuatorType" in c:
+                if c["actuatorType"] not in ("Motor", "Servo"):
+                    del c["actuatorType"]
+
             # Validate vector and offset fields
-            for key in ("offset0", "offset1", "angularVelocity", "vectorVelocity"):
+            for key in ("offset0", "offset1", "axis", "angularVelocity", "vectorVelocity", "force"):
                 if key in c:
                     val = c[key]
                     if isinstance(val, list) and len(val) >= 3:

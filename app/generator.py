@@ -50,9 +50,19 @@ RULES:
 - Use 15-40 parts maximum
 - Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material, transparency (0-1, default 0), anchored (bool, default true — set false for parts that should move via physics/constraints), body_part (optional, for avatars only)
 - Available materials: SmoothPlastic, Neon, Foil, Glass, Metal, Fabric, Wood, Concrete, Brick, Marble, Ice
-- Per-part physics (optional): elasticity (0-1, bounce coefficient, default 0.5), friction (0-1, default 0.3), density (weight, default 0.7). Set these on any part that needs custom physics — e.g. a trampoline surface needs elasticity=1.0, an ice rink needs friction=0.05, a heavy anvil needs density=5.0
-- CONSTRAINTS (optional): add a "constraints" array to connect parts with Roblox physics joints. Schema: {type, part0, part1, offset0, offset1, ...roblox constraint properties}. Unanchored parts MUST connect to an anchored part via constraint or they fall. Max 20 constraints.
-  Types: Spring, Hinge, BallSocket, Weld, Rod, Rope, Prismatic, TorsionSpring, AngularVelocity (part0 only), LinearVelocity (part0 only). Use standard Roblox constraint property names.
+- Per-part physics (optional): elasticity (0-1, default 0.5), friction (0-1, default 0.3), density (weight, default 0.7). E.g. ice rink friction=0.05, heavy anvil density=5.0
+- CONSTRAINTS (optional): "constraints" array connecting parts. Schema: {type, part0, part1, axis, offset0, offset1, ...properties}. Max 20. Unanchored parts MUST connect to an anchored part or they fall.
+  axis: [x,y,z] — sets attachment direction for Hinge/Prismatic. CRITICAL: both attachments get the same axis. Mismatched axes rotate parts!
+  TESTED RECIPES:
+  - Door: Hinge, axis [0,1,0], limitsEnabled, lowerAngle 0, upperAngle 90
+  - Seesaw/lever: Hinge, axis [0,0,1], part1 unanchored low density
+  - Trampoline/launcher: Prismatic(axis [0,1,0], limitsEnabled, lowerLimit 0, upperLimit 5) on base→pad + LinearVelocity(part0=pad, vectorVelocity [0,100,0], maxForce 99999)
+  - Spinner: Hinge(axis [0,1,0]) + AngularVelocity(angularVelocity [0,2,0], maxTorque 5000)
+  - Flipper: Hinge, axis [0,0,1], actuatorType "Motor", motorSpeed 5, motorMaxTorque 10000, limitsEnabled
+  - Swing/pendulum: Rope(length=5) or Rod from anchored top to unanchored seat
+  - Elevator: Prismatic(axis [0,1,0], limitsEnabled) + LinearVelocity for movement
+  Types: Hinge, Prismatic, LinearVelocity (part0 only), AngularVelocity (part0 only), VectorForce (part0 only, force [x,y,z]), Weld, Rod, Rope, BallSocket, Spring, TorsionSpring
+  DO NOT use Spring for player bounce — it does not launch players. Use Prismatic + LinearVelocity.
 - Position is relative to model center at [0,0,0], ground is y=0
 - NEVER place two parts at the exact same position — offset by at least 0.2 studs
 - Return ONLY valid JSON, no explanation
