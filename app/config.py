@@ -137,12 +137,9 @@ CATEGORY_PROMPTS = {
     ),
     "prop": (
         "Decorative object or prop. 2-8 studs. Sits on ground or table. "
-        "Suggest animation: spin_slow for showcase items, idle_bob for living props.\n\n"
-        "INTERACTIVE PROPS: If the user asks for something that should physically interact with players "
-        "(trampolines, bounce pads, launch pads, jump pads, springboards, etc.), "
-        'set attributes.Bounce to a number (50-200) representing upward launch force. '
-        "Example: a trampoline should have {\"Bounce\": 120}. "
-        "Only set Bounce when the object's purpose is clearly to launch/bounce players."
+        "Suggest animation: spin_slow for showcase items, idle_bob for living props. "
+        "Use per-part physics properties when the object should interact physically with players "
+        "(e.g. trampoline surface with high elasticity, ice rink with low friction)."
     ),
     "animation": (
         "ANIMATION MODE — You are generating a keyframe animation for an R15 humanoid mannequin, NOT a 3D model.\n"

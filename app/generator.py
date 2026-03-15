@@ -50,6 +50,7 @@ RULES:
 - Use 15-40 parts maximum
 - Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material, transparency (0-1, default 0), body_part (optional, for avatars only)
 - Available materials: SmoothPlastic, Neon, Foil, Glass, Metal, Fabric, Wood, Concrete, Brick, Marble, Ice
+- Per-part physics (optional): elasticity (0-1, bounce coefficient, default 0.5), friction (0-1, default 0.3), density (weight, default 0.7). Set these on any part that needs custom physics — e.g. a trampoline surface needs elasticity=1.0, an ice rink needs friction=0.05, a heavy anvil needs density=5.0
 - Position is relative to model center at [0,0,0], ground is y=0
 - NEVER place two parts at the exact same position — offset by at least 0.2 studs
 - Return ONLY valid JSON, no explanation
