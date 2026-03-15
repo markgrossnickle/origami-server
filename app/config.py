@@ -19,8 +19,8 @@ MODELS = {
 }
 
 # Rate limiting
-RATE_LIMIT_BURST_SECONDS = 1  # 1 request per N seconds
-RATE_LIMIT_HOURLY = 20  # max requests per hour per player
+RATE_LIMIT_BURST_SECONDS = 0  # disabled — let players create freely
+RATE_LIMIT_HOURLY = 200  # generous hourly limit per player
 
 # Category prompt additions — describe structure/anatomy, NOT construction technique (style prompt handles that)
 CATEGORY_PROMPTS = {
