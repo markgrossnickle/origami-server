@@ -337,6 +337,52 @@ def validate_output(result: dict) -> dict | None:
     if _check_middle_finger(sanitized_parts):
         return None
 
+    # Validate constraints if present
+    constraints = result.get("constraints")
+    if isinstance(constraints, list) and len(constraints) > 0:
+        valid_constraint_types = {
+            "Spring", "Hinge", "BallSocket", "Weld", "Rod",
+            "Rope", "Prismatic", "TorsionSpring", "AngularVelocity", "LinearVelocity",
+        }
+        single_attachment_types = {"AngularVelocity", "LinearVelocity"}
+        part_names = {p.get("name") for p in sanitized_parts if isinstance(p.get("name"), str)}
+
+        sanitized_constraints = []
+        for c in constraints[:20]:
+            if not isinstance(c, dict):
+                continue
+            ctype = c.get("type")
+            if ctype not in valid_constraint_types:
+                continue
+            if not isinstance(c.get("part0"), str) or c["part0"] not in part_names:
+                continue
+            # part1 required for all except single-attachment types
+            if ctype not in single_attachment_types:
+                if not isinstance(c.get("part1"), str) or c["part1"] not in part_names:
+                    continue
+
+            # Clamp numeric values to safe ranges
+            for key in ("stiffness", "damping", "freeLength", "length",
+                        "restitution", "maxTorque", "maxForce", "maxAngle"):
+                if key in c:
+                    c[key] = max(0, min(10000, float(c[key])))
+            for key in ("lowerAngle", "upperAngle", "lowerLimit", "upperLimit"):
+                if key in c:
+                    c[key] = max(-180, min(180, float(c[key])))
+
+            # Validate vector and offset fields
+            for key in ("offset0", "offset1", "angularVelocity", "vectorVelocity"):
+                if key in c:
+                    val = c[key]
+                    if isinstance(val, list) and len(val) >= 3:
+                        c[key] = [max(-500, min(500, float(v))) for v in val[:3]]
+                    else:
+                        del c[key]
+
+            sanitized_constraints.append(c)
+
+        result["constraints"] = sanitized_constraints
+
     # Sanitize name — strip anything weird
     name = result.get("name", "")
     if isinstance(name, str):

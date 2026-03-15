@@ -66,6 +66,10 @@ CATEGORY_PROMPTS = {
         "Rideable vehicle or transport the player will sit in and drive. "
         "Center at [0,0,0]. Leave a gap near center for invisible driver seat (game adds it). "
         "6-8 studs tall, 12-16 long. Suggest animation: none.\n\n"
+        "CONSTRAINTS — use for moving vehicle parts:\n"
+        "- Spinning wheels/propellers: AngularVelocity(angularVelocity=[0,0,10], maxTorque=500)\n"
+        "- Suspension: Spring(stiffness=200, damping=20) between body and axle\n"
+        "- Steering column: Hinge(limitsEnabled=true, lowerAngle=-30, upperAngle=30)\n\n"
         "ATTRIBUTES (set in \"attributes\" dict):\n"
         "- Speed (number 10-120): top speed in studs/sec. Default 50. Fast car=100, slow cart=20.\n"
         "- Torque (number 10-100): acceleration force. Default 40.\n"
@@ -75,15 +79,14 @@ CATEGORY_PROMPTS = {
         "Example: a rocket ship → Speed=100, Torque=80, CanFly=true, FlySpeed=50\n"
         "Example: a wooden cart → Speed=20, Torque=15, TurnSpeed=5"
     ),
-    "building": (
-        "Architecture or structure. Flat bottom, vertical build. "
-        "15-20 studs tall. "
-        "Suggest animation: none or breathe for magical buildings."
-    ),
     "tool": (
         "Handheld tool or item the player holds. 3-5 studs total. "
         "Center at [0,0,0], grip at bottom (negative Y), functional end at top (positive Y). "
         "Suggest animation: none.\n\n"
+        "CONSTRAINTS — use for tools with moving/dangling parts:\n"
+        "- Spinning drill bit: AngularVelocity(angularVelocity=[0,5,0], maxTorque=200)\n"
+        "- Flail/chain: Rod(length=3) or Rope(length=3) from handle to head\n"
+        "- Hinged jaw (pliers): Hinge(limitsEnabled=true, lowerAngle=0, upperAngle=30)\n\n"
         "ATTRIBUTES (set in \"attributes\" dict):\n"
         "- Cooldown (number 0.1-3): seconds between clicks. Default 0.5.\n"
         "- OnClick (list of action dicts): what happens when clicked. Actions execute in order.\n\n"
@@ -136,10 +139,19 @@ CATEGORY_PROMPTS = {
         "Not every accessory needs an effect — many are purely cosmetic (no AccessoryEffect needed)."
     ),
     "prop": (
-        "Decorative object or prop. 2-8 studs. Sits on ground or table. "
+        "Decorative object or interactive prop. 2-8 studs. Sits on ground or table. "
         "Suggest animation: spin_slow for showcase items, idle_bob for living props. "
         "Use per-part physics properties when the object should interact physically with players "
-        "(e.g. trampoline surface with high elasticity, ice rink with low friction)."
+        "(e.g. trampoline surface with high elasticity, ice rink with low friction).\n\n"
+        "CONSTRAINTS — use these to make mechanically interactive props. Set anchored=false on moving parts, "
+        "anchored=true on fixed parts, and connect them with constraints:\n"
+        "- Trampoline: anchored platform with elasticity=1.0 (bounces players). Optional: unanchored surface + Spring to anchored base for visual flex.\n"
+        "- Door: frame(anchored) + panel(unanchored) + Hinge(limitsEnabled=true, lowerAngle=0, upperAngle=90)\n"
+        "- Seesaw: post(anchored) + plank(unanchored) + Hinge at center\n"
+        "- Swing: frame(anchored) + seat(unanchored) + Rope(length=5) or BallSocket at top\n"
+        "- Conveyor belt: anchored belt + AngularVelocity(angularVelocity=[0,0,5], maxTorque=1000)\n"
+        "- Elevator: anchored shaft + unanchored platform + Prismatic(limitsEnabled=true, lowerLimit=0, upperLimit=20)\n"
+        "- Spinning fan: anchored base + unanchored blades + AngularVelocity(angularVelocity=[0,10,0], maxTorque=500)"
     ),
     "animation": (
         "ANIMATION MODE — You are generating a keyframe animation for an R15 humanoid mannequin, NOT a 3D model.\n"

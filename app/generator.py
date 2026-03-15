@@ -48,9 +48,11 @@ SYSTEM_PROMPT = """You are a 3D model generator for a Roblox game. Given a subje
 RULES:
 - The "name" field should be the subject itself (e.g. "Dragon", "Sports Car")
 - Use 15-40 parts maximum
-- Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material, transparency (0-1, default 0), body_part (optional, for avatars only)
+- Each part has: shape (Block/Ball/Cylinder/Wedge), position [x,y,z], size [x,y,z], rotation [x,y,z] (degrees), color [r,g,b] (0-255), material, transparency (0-1, default 0), anchored (bool, default true — set false for parts that should move via physics/constraints), body_part (optional, for avatars only)
 - Available materials: SmoothPlastic, Neon, Foil, Glass, Metal, Fabric, Wood, Concrete, Brick, Marble, Ice
 - Per-part physics (optional): elasticity (0-1, bounce coefficient, default 0.5), friction (0-1, default 0.3), density (weight, default 0.7). Set these on any part that needs custom physics — e.g. a trampoline surface needs elasticity=1.0, an ice rink needs friction=0.05, a heavy anvil needs density=5.0
+- CONSTRAINTS (optional): add a "constraints" array to connect parts with Roblox physics joints. Schema: {type, part0, part1, offset0, offset1, ...roblox constraint properties}. Unanchored parts MUST connect to an anchored part via constraint or they fall. Max 20 constraints.
+  Types: Spring, Hinge, BallSocket, Weld, Rod, Rope, Prismatic, TorsionSpring, AngularVelocity (part0 only), LinearVelocity (part0 only). Use standard Roblox constraint property names.
 - Position is relative to model center at [0,0,0], ground is y=0
 - NEVER place two parts at the exact same position — offset by at least 0.2 studs
 - Return ONLY valid JSON, no explanation
@@ -91,7 +93,7 @@ Response format:
 "attributes" is an optional dict of key-value behavior/physics hints. See category guidance for what attributes to set for each category. Omit or leave empty if no special behavior is needed.
 
 Available animations: idle_bob, spin_slow, bounce, wobble, flutter, breathe, none
-Available categories: creature, avatar, vehicle, building, tool, accessory, prop
+Available categories: creature, avatar, vehicle, tool, accessory, prop
 
 PART NAMING — the game animates parts based on their name prefix:
 - Body segments: seg_1, seg_2, seg_3... (body fold animation)
